@@ -20,6 +20,7 @@ BUILDOUT_DIR = os.path.join(
 AGGREGATE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'aggregate')
 CALIBRATE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'calibrate')
 CONSISTENT_DIR = os.path.join(BUILDOUT_DIR, 'var', 'consistent')
+FACTOR_DIR = os.path.join(BUILDOUT_DIR, 'var', 'factor')
 IMG_DIR = os.path.join(BUILDOUT_DIR, 'var', 'img')
 MISC_DIR = os.path.join(BUILDOUT_DIR, 'var', 'misc')
 MULTISCAN_DIR = os.path.join(BUILDOUT_DIR, 'var', 'multiscan')
