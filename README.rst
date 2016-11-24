@@ -132,21 +132,6 @@ Cronjobs on production server
     12     * *   *   *   find /srv/openradar/var/nowcast_aggregate -mmin +59 -delete
     13     * *   *   *   find /srv/openradar/var/nowcast_calibrate -mmin +59 -delete
     14     7 *   *   *   find /mnt/fews-g/data-archive/img -mtime +3 -delete
-    # Load radar data into the raster store
-    */5    * *   *   *   /srv/openradar/bin/atomic-nowcast
-    4-59/5 * *   *   *   /srv/openradar/bin/atomic-store 1h -d -p r
-    15     * *   *   *   /srv/openradar/bin/atomic-store 1d -d -p n
-    16     * *   *   *   /srv/openradar/bin/atomic-store 7d -d -p a
-    17     * *   *   *   /srv/openradar/bin/atomic-store 7d -d -p u
-    # Optimize radar data in the raster store
-    08     * *   *   *   /srv/openradar/bin/atomic-move 5min real1 real2
-    01    22 *   *   *   /srv/openradar/bin/atomic-merge
-    11    23 *   *   *   /srv/openradar/bin/atomic-move 5min merge final
-    21    23 *   *   1   /srv/openradar/bin/atomic-move hour merge final
-    31    23 1   *   *   /srv/openradar/bin/atomic-move day merge final
-    # Report on the status of the data in the raster stores
-    0     12 *   *   *   /srv/openradar/bin/atomic-report 7d -q
-    */15   * *   *   *   /srv/openradar/bin/atomic-report 7d
 
 
 Product table
