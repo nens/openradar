@@ -153,6 +153,8 @@ FTP_THROUGH = {}
 REDIS_HOST = 'localhost'
 REDIS_DB = 0
 
+CELERY_BROKER_URL = 'redis://localhost'  # until rmq better understood
+
 # Import local settings
 try:
     from openradar.localconfig import *  # NOQA
