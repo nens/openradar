@@ -368,13 +368,14 @@ class ScanKNMI(GenericScan):
     def data(self):
         """ Return data dict for further processing. """
         scanpath = self.signature.get_scanpath()
+        code = self.signature.get_code()
         with h5py.File(scanpath, 'r') as dataset:
-            scan_key = 'scan{}'.format(config.KNMI_SCAN_NUMBER)
+            scan_key = 'scan{}'.format(config.KNMI_SCAN_NUMBER[code])
 
             latlon = self._latlon(dataset)
             rain = self._rain(dataset[scan_key])
             polar = self._polar(dataset[scan_key])
-            ant_alt = config.ANTENNA_HEIGHT[self.signature.get_code()]
+            ant_alt = config.ANTENNA_HEIGHT[code]
 
         return dict(
             latlon=latlon,
@@ -705,8 +706,8 @@ class Composite(object):
         )
 
         # Extend mask around NL stations
-        if 'NL60' in stations and 'NL61' in stations:
-            for i in map(stations.index, ['NL60', 'NL61']):
+        if 'NL60' in stations and 'NL62' in stations:
+            for i in map(stations.index, ['NL60', 'NL62']):
                 rain.mask[i][np.less(rang[i], 15)] = True
 
         # Extend mask around JAB
