@@ -28,6 +28,12 @@ class RainStation(object):
         self.klasse = int(klasse)
         self.measurement = measurement
 
+    def as_dict(self, attrs=None):
+        """return dictionary of (selected) attributes"""
+        if attrs is None:
+            attrs = [a for a in dir(attrs) if not a.startswith('__')]
+        return {a: getattr(self, a) for a in attrs}
+
 
 class DataLoader(object):
     '''
@@ -95,6 +101,13 @@ class DataLoader(object):
                 klasse=0,
                 measurement=-999. if d['value'] is None else d['value'],
             ))
+
+    def get_rainstation_data(self, attrs, skip_na=True):
+        """ Return rainstations as dictionaries, optionally skipping nodata. """
+        for station in self.rainstations:
+            if skip_na and station.measurement == -999.:
+                continue
+            yield station.as_dict(attrs=attrs)
 
     def stations_dummies(self):
         data = self.stationsdata

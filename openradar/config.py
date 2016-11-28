@@ -129,6 +129,9 @@ DELIVERY_TIMES = (
     ('u', datetime.timedelta(days=30)),
 )
 
+# attributes for rainstations to store in h5 file metadata
+RAINSTATION_METADATA = ['station_id' , 'lat', 'lon', 'measurement']
+
 # Delays for waiting-for-files
 WAIT_SLEEP_TIME = 10  # Seconds
 WAIT_EXPIRE_DELTA = datetime.timedelta(minutes=3)

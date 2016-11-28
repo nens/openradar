@@ -431,9 +431,10 @@ class CalibratedProduct(object):
         try:
             dataloader.processdata()
             stations_count = len(dataloader.rainstations)
-            data_count = len([r
-                              for r in dataloader.rainstations
-                              if r.measurement != -999])
+            station_attrs = config.RAINSTATION_METADATA
+            get_station_data = dataloader.get_rainstation_data(station_attrs)
+            stations_data = [r for r in get_station_data]
+            data_count = len(stations_data)
             logging.info('{} out of {} gauges have data for {}.'.format(
                 data_count, stations_count, dataloader.date)
             )
@@ -494,6 +495,7 @@ class CalibratedProduct(object):
         dataloader.dataset.close()
         # Append metadata about the calibration
         self.metadata.update(dict(
+            cal_stations_data=stations_data,
             cal_stations_count=stations_count,
             cal_data_count=data_count,
             cal_method=calibration_method,
