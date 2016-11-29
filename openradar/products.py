@@ -441,6 +441,7 @@ class CalibratedProduct(object):
         except:
             logging.exception('Exception during calibration preprocessing:')
             stations_count = 0
+            stations_data = []
             data_count = 0
         interpolator = Interpolator(dataloader)
 
