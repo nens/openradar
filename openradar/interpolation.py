@@ -28,10 +28,14 @@ class RainStation(object):
         self.klasse = int(klasse)
         self.measurement = measurement
 
-    def as_dict(self, attrs=None):
+    def __repr__(self):
+        return ('<RainStation {self.station_id:} '
+        'measurement: {self.measurement: .3f} mm>').format(
+        self=self
+        )
+
+    def as_dict(self, attrs):
         """return dictionary of (selected) attributes"""
-        if attrs is None:
-            attrs = [a for a in dir(attrs) if not a.startswith('__')]
         return {a: getattr(self, a) for a in attrs}
 
 
