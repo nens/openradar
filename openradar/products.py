@@ -431,17 +431,21 @@ class CalibratedProduct(object):
         try:
             dataloader.processdata()
             stations_count = len(dataloader.rainstations)
-            station_attrs = config.RAINSTATION_METADATA
-            get_station_data = dataloader.get_rainstation_data(station_attrs)
-            stations_data = [r for r in get_station_data]
-            data_count = len(stations_data)
+            cal_stations = [rs for rs in dataloader.rainstations
+                if not rs.measurement == -999.]
+            data_count = len(cal_stations)
+            cal_station_ids = [rs.station_id for rs in cal_stations]
+            cal_station_coords = [(rs.lat, rs.lon) for rs in cal_stations]
+            cal_station_measurements = [rs.measurement for rs in cal_stations]
             logging.info('{} out of {} gauges have data for {}.'.format(
                 data_count, stations_count, dataloader.date)
             )
         except:
             logging.exception('Exception during calibration preprocessing:')
             stations_count = 0
-            stations_data = []
+            cal_station_ids = []
+            cal_station_coords = []
+            cal_station_measurements = []
             data_count = 0
         interpolator = Interpolator(dataloader)
 
@@ -496,7 +500,9 @@ class CalibratedProduct(object):
         dataloader.dataset.close()
         # Append metadata about the calibration
         self.metadata.update(dict(
-            cal_stations_data=stations_data,
+            cal_station_ids=cal_station_ids,
+            cal_station_coords=cal_station_coords,
+            cal_station_measurements=cal_station_measurements,
             cal_stations_count=stations_count,
             cal_data_count=data_count,
             cal_method=calibration_method,
