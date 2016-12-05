@@ -96,7 +96,6 @@ class DataLoader(object):
                 measurement=-999. if d['value'] is None else d['value'],
             ))
 
-
     def stations_dummies(self):
         data = self.stationsdata
         xcol = data[0].index('X')
