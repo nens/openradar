@@ -90,8 +90,8 @@ class DataLoader(object):
         for d in dbdata:
             self.rainstations.append(RainStation(
                 station_id=d['id'],
-                lat=d['coords'][0],
-                lon=d['coords'][1],
+                lat=d['coords'][1],
+                lon=d['coords'][0],
                 klasse=0,
                 measurement=-999. if d['value'] is None else d['value'],
             ))
@@ -130,7 +130,7 @@ class Interpolator(object):
         Seperates the measurements location and data. Also requests the classes
         of each weather stations. These are now by default set to 1.
         '''
-        xy = numpy.array([[i.lat, i.lon]
+        xy = numpy.array([[i.lon, i.lat]
                           for i in self.dataloader.rainstations])
         z = numpy.array([i.measurement for i in self.dataloader.rainstations])
         klasse = numpy.array([i.klasse for i in self.dataloader.rainstations])
@@ -145,7 +145,7 @@ class Interpolator(object):
         For correction field calculation dummies are needed to fill the gaps.
         '''
         self.dataloader.stations_dummies()
-        xyz = numpy.ma.array([[i.lat, i.lon, i.measurement]
+        xyz = numpy.ma.array([[i.lon, i.lat, i.measurement]
                               for i in self.dataloader.stations])
         return xyz.T
 

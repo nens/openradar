@@ -435,8 +435,8 @@ class CalibratedProduct(object):
                 if not rs.measurement == -999.]
             data_count = len(cal_stations)
             cal_station_ids = np.array([rs.station_id for rs in cal_stations],
-                dtype='S50')
-            cal_station_coords = [(rs.lat, rs.lon) for rs in cal_stations]
+                dtype='S20')
+            cal_station_coords = [(rs.lon, rs.lat) for rs in cal_stations]
             cal_station_measurements = [rs.measurement for rs in cal_stations]
             logging.info('{} out of {} gauges have data for {}.'.format(
                 data_count, stations_count, dataloader.date)
