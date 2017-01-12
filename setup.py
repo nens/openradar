@@ -11,6 +11,7 @@ install_requires = [
     'Pillow',
     'celery',
     'celery[redis]',
+    'ciso8601',
     'gdal',
     'h5py>=2.3.1',
     'matplotlib',

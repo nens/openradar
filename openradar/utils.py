@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 
+import ciso8601
 import codecs
 import cStringIO
 import csv
@@ -628,3 +629,11 @@ def get_geo_transform():
     left, right, top, bottom = config.COMPOSITE_EXTENT
     width, height = config.COMPOSITE_CELLSIZE
     return left, width, 0, top, 0, -height
+
+
+def parse_datetime(text):
+    """ Return a datetime instance. """
+    if len(text) == 4:
+        # ciso8601 requires at least months to be specified
+        return ciso8601.parse_datetime_unaware(text + '01')
+    return ciso8601.parse_datetime_unaware(text)

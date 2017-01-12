@@ -9,6 +9,8 @@ Changelog of openradar
 
 - Work towards new HDF5 format.
 
+- Put ciso8601 and dateparsing back for repair script.
+
 
 0.4 (2016-08-26)
 ----------------
