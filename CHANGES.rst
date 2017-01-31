@@ -5,6 +5,14 @@ Changelog of openradar
 0.5 (unreleased)
 ----------------
 
+- Remove NL60.
+
+- Adjust elevation index for NL61, because it is a new radar.
+
+- Have NL61 and NL62 cover each others inner circles.
+
+- Have JABs inner circle covered by NL62 instead of NL60.
+
 - Add time_limit for all tasks.
 
 - Work towards new HDF5 format.

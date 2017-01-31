@@ -45,7 +45,7 @@ DECLUTTER_SIZE = 4
 
 # Radar codes
 DWD_RADARS = ('ess', 'nhb', 'emd', 'ase')  # ess is sometimes called ase
-KNMI_RADARS = ('NL60', 'NL61', 'NL62')
+KNMI_RADARS = ('NL61', 'NL62')
 JABBEKE_RADARS = ('JAB',)
 ALL_RADARS = DWD_RADARS + KNMI_RADARS + JABBEKE_RADARS
 
@@ -97,13 +97,12 @@ ANTENNA_HEIGHT = dict(
     emd=58.00,
     ess=185.10,
     nhb=585.15,
-    NL60=44,
     NL61=51,
     NL62=50,  # not true!!!
 )
 
 # KNMI scan selection
-KNMI_SCAN_NUMBER = {'NL60': 2, 'NL61': 2, 'NL62': 7}
+KNMI_SCAN_NUMBER = {'NL61': 7, 'NL62': 7}
 KNMI_SCAN_TYPE = 'Z'
 
 # Naming of products and files

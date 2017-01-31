@@ -706,12 +706,12 @@ class Composite(object):
         )
 
         # Extend mask around NL stations
-        if 'NL60' in stations and 'NL62' in stations:
-            for i in map(stations.index, ['NL60', 'NL62']):
+        if 'NL61' in stations and 'NL62' in stations:
+            for i in map(stations.index, ['NL61', 'NL62']):
                 rain.mask[i][np.less(rang[i], 15)] = True
 
         # Extend mask around JAB
-        if 'JAB' in stations and 'NL60' in stations:
+        if 'JAB' in stations and 'NL62' in stations:
             i = stations.index('JAB')
             rain.mask[i][np.less(rang[i], 15)] = True
 
