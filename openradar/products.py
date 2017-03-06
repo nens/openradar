@@ -517,7 +517,7 @@ class CalibratedProduct(object):
         logging.debug('Setting negative values to 0. Min was: {}'.format(
             calibrated_ma.min()),
         )
-        calibrated_ma[np.ma.less(calibrated_ma, 0)] = 0
+        calibrated_ma.data[np.ma.less(calibrated_ma, 0)] = 0
 
         utils.save_dataset(path=self.path,
                            meta=self.metadata,

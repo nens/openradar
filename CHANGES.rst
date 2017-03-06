@@ -19,6 +19,8 @@ Changelog of openradar
 
 - Put ciso8601 and dateparsing back for repair script.
 
+- Resolve the numpy future warning.
+
 
 0.4 (2016-08-26)
 ----------------
