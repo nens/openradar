@@ -26,21 +26,11 @@ calibrate the 5 minute data.
 
 Installation
 ------------
-Install using system repositories (e.g. apt-get, brew, pacman):
-    * python-gdal
-    * python-matplotlib
-    * python-pandas
-    * python-psycopg2
-    * python-rpy2
-    * python-scipy
-    * python-tornado
-    * redis-server
+Install using system repositories (e.g. apt-get, brew, pacman)::
 
-    * libgeos-dev
-    * libhdf5-serial-dev
-    * libnetcdf-dev
-
-    * imagemagick
+    sudo apt-get install python-gdal python-matplotlib python-pandas \
+    python-psycopg2 python-rpy2 python-scipy python-tornado redis-server \
+    libgeos-dev libhdf5-serial-dev libnetcdf-dev imagemagick
 
 Then, to install the 'gstat' package, in the R interpreter::
     
