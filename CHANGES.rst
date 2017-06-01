@@ -21,6 +21,8 @@ Changelog of openradar
 
 - Resolve the numpy future warning.
 
+- Remove automatic geotiff publishing.
+
 
 0.4 (2016-08-26)
 ----------------
