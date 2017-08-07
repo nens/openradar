@@ -133,7 +133,7 @@ class Argument(object):
             metavar='ENDPOINT',
             nargs='*',
             choices=['h5', 'h5m', 'image', 'local', 'ftp'],
-            default=['h5', 'h5m', 'image', 'local', 'ftp'],
+            default=['image', 'local', 'ftp'],
             help='Endpoint for publication.'
         )
 
