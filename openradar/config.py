@@ -144,8 +144,10 @@ FTP_AGE = 7   # max age in days for files on ftp
 FTP_HOST = ''  # Empty to skip ftp publishing
 FTP_USER = 'MyUser'
 FTP_PASSWORD = 'MyPassword'
-# Imports and throughputs
+# Old style FTP imports
 FTP_RADARS = {}
+# New style mixed source imports
+REMOTE_RADARS = []
 # Throughputs of radar related data to client ftp.
 FTP_THROUGH = {}
 

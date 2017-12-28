@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 
 from openradar import config
+from openradar import periods
 from openradar import scans
 from openradar import utils
 
@@ -14,6 +15,7 @@ from datetime import datetime as Datetime
 from datetime import timedelta as Timedelta
 from os.path import abspath, dirname, exists, join
 
+import collections
 import ftplib
 import logging
 import os
@@ -202,3 +204,30 @@ def sync_and_wait_for_files(dt_calculation, td_wait=None, sleep=10):
 
     ftp_importer.close()
     return False
+
+
+RemoteFile = collections.namedtuple('RemoteFile', ['rpath', 'lname'])
+
+
+class RemoteFileGenerator(object):
+    def __init__(self, text):
+        self.period = periods.Period(text)
+
+    def __iter__(self):
+        for datetime in self.period:
+            for remote_file in config.REMOTE_RADARS:
+                rpath = datetime.strftime(remote_file['remote'])
+                lname = datetime.strftime(remote_file['local'])
+                yield RemoteFile(rpath=rpath, lname=lname)
+
+
+class RemoteFileRetriever(object):
+    """ Contain a lot of protocol specific retriever methods. """
+    def retrieve(self, remote_file):
+        print(remote_file)
+
+
+remote_file_generator = RemoteFileGenerator('15m')
+remote_file_retriever = RemoteFileRetriever()
+for remote_file in remote_file_generator:
+    remote_file_retriever.retrieve(remote_file)
