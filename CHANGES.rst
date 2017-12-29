@@ -7,6 +7,10 @@ Changelog of openradar
 
 - Created workaround for quirky opendata service.
 
+- Added basic auth support and verification flag for remote radars.
+
+- Bumped radar to 0.2.7.
+
 
 0.4.1 (2017-12-29)
 ------------------
