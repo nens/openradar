@@ -216,12 +216,12 @@ class RemoteFileRetriever(object):
 
                 # attempt to retrieve
                 url = datetime.strftime(remote_radar['url'])
-                if url not in available:
+                if remote_radar['verify'] and url not in available:
                     logging.debug('%s not available yet.', scan_name)
                     continue
 
                 logging.debug('Trying to retrieve %s', url)
-                response = requests.get(url)
+                response = requests.get(url, auth=remote_radar.get('auth'))
                 if response.status_code != 200:
                     logging.debug('Retrieve of %s failed.', scan_name)
                     continue
