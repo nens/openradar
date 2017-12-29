@@ -15,6 +15,7 @@ from datetime import timedelta as Timedelta
 from os.path import abspath, dirname, exists, join
 
 import ftplib
+import json
 import logging
 import os
 import shutil
@@ -47,6 +48,56 @@ def organize_from_path(path):
         logging.info('Processed %s files', count)
     except NameError:
         logging.info('Nothing found.')
+
+
+def get_available_urls():
+    """
+    The KNMI open data service returns yesterdays volume file if todays
+    file is not available yet. Luckily, a webservice exists that lists the
+    available volume files. This function returns a set of urls that represent
+    available products.
+    """
+    granule_id_head = 'urn:xkdc:dg:nl.knmi::'
+    dataset_id_head = 'urn:xkdc:ds:nl.knmi::'
+    dataset_id_tails = (
+        'radar_volume_denhelder/2.0/',
+        'radar_volume_full_herwijnen/1.0/',
+    )
+
+    template = (
+        'https://data.knmi.nl/webservices/metadata/searchDataGranuleMetadata'
+        '?from=1'
+        '&to=24'
+        '&sorting[sortField]=dateFrom'
+        '&sorting[sortCaseSensitive]=false'
+        '&sorting[sortOrder]=DESC'
+        '&datasetId={dataset_id}'
+        '&temporalExtent[dateFrom]='
+        '&temporalExtent[timeFrom]='
+        '&temporalExtent[timeTo]='
+        '&temporalExtent[dateTo]='
+        '&license[openData]=false'
+        '&editMode=false'
+        '&isThirdParty=true'
+    )
+
+    result = []
+    for dataset_id_tail in dataset_id_tails:
+        # fetch available so-called granule ids from the webservice
+        url = template.format(dataset_id=dataset_id_head + dataset_id_tail)
+        response = requests.get(url, auth=('guest', 'guest'))
+        data = response.json()['data']
+
+        # turn them into download urls
+        for item in data:
+            data_granule_id = json.loads(item)['dataGranuleId']
+            result.append(join(
+                'https://data.knmi.nl/download',
+                data_granule_id[len(granule_id_head):],
+            ))
+
+    # return as a set for quick lookups
+    return set(result)
 
 
 class FtpImporter(object):
@@ -143,6 +194,8 @@ class RemoteFileRetriever(object):
 
     def retrieve(self, text):
         """ Retrieve files for some period. """
+        available = get_available_urls()
+
         count = 0
         for datetime in periods.Period(text):
             for remote_radar in self.remote_radars:
@@ -163,6 +216,10 @@ class RemoteFileRetriever(object):
 
                 # attempt to retrieve
                 url = datetime.strftime(remote_radar['url'])
+                if url not in available:
+                    logging.debug('%s not available yet.', scan_name)
+                    continue
+
                 logging.debug('Trying to retrieve %s', url)
                 response = requests.get(url)
                 if response.status_code != 200:

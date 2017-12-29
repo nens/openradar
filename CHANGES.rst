@@ -5,7 +5,7 @@ Changelog of openradar
 0.4.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Created workaround for quirky opendata service.
 
 
 0.4.1 (2017-12-29)
