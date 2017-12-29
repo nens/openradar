@@ -281,7 +281,7 @@ def sync_and_wait_for_files(dt_calculation, td_wait=None, sleep=10):
             logging.info('Fetched %s files from FTP.', len(fetched))
         # retrieve from http sources
         retrieved = remote_file_retriever.retrieve('1h')
-        if fetched:
+        if retrieved:
             logging.info('Retrieved %s remote files.', retrieved)
 
         set_names = set()
