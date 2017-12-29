@@ -49,8 +49,8 @@ Then, to install the 'gstat' package, in the R interpreter::
 
 The standard buildout deployment::
     
-    $ python bootstrap.py
-    $ bin/buildout
+    $ pip install zc.buildout
+    $ buildout
 
 Then to setup the radar server production use, for Nelen & Schuurmans
 the easiest way is to clone the nens/radar repository as development

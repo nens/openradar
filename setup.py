@@ -20,6 +20,7 @@ install_requires = [
     'psycopg2',
     'pytz',
     'redis',
+    'requests',
     'rpy2',
     'scipy>=0.13.3',
     'setuptools',

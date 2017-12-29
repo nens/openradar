@@ -23,6 +23,12 @@ Changelog of openradar
 
 - Remove automatic geotiff publishing.
 
+- Set maximum retrieve time for volume data to 1 hour.
+
+- Started using HTTP for fetching part of the volume data.
+
+- Traded bootstrap.py for a pip-installed buildout.
+
 
 0.4 (2016-08-26)
 ----------------

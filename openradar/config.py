@@ -29,8 +29,6 @@ NOWCAST_MULTISCAN_DIR = os.path.join(BUILDOUT_DIR, 'var', 'nowcast_multiscan')
 RADAR_DIR = os.path.join(BUILDOUT_DIR, 'var', 'radar')
 REPORT_DIR = os.path.join(BUILDOUT_DIR, 'var', 'report')
 SOURCE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'source')
-STORE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'store')
-THREDDS_DIR = os.path.join(BUILDOUT_DIR, 'var', 'thredds')
 
 # Unlikely to be overwritten
 LOG_DIR = os.path.join(BUILDOUT_DIR, 'var', 'log')

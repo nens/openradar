@@ -9,18 +9,18 @@ from __future__ import division
 from openradar import config
 from openradar import periods
 from openradar import scans
-from openradar import utils
 
 from datetime import datetime as Datetime
 from datetime import timedelta as Timedelta
 from os.path import abspath, dirname, exists, join
 
-import collections
 import ftplib
 import logging
 import os
 import shutil
 import time
+
+import requests
 
 
 def organize_from_path(path):
@@ -53,13 +53,11 @@ class FtpImporter(object):
     """
     Connect to ftp for radars and fetch any files that are not fetched yet.
     """
-    def __init__(self, datetime, max_age=86400):
+    def __init__(self, datetime, max_age=3600):
         """
         Set datetime and empty connection dictionary. Max age is in
         seconds, measured from datetime.
         """
-        utils.makedir(config.SOURCE_DIR)
-
         self.datetime = datetime
         self.max_age = max_age
         self.connections = {}
@@ -137,6 +135,50 @@ class FtpImporter(object):
             logging.debug('Quit FTP connection to {}'.format(group))
 
 
+class RemoteFileRetriever(object):
+    """ Currently retrieves from HTTPS. """
+    def __init__(self, remote_radars, source_dir):
+        self.remote_radars = remote_radars
+        self.source_dir = source_dir
+
+    def retrieve(self, text):
+        """ Retrieve files for some period. """
+        count = 0
+        for datetime in periods.Period(text):
+            for remote_radar in self.remote_radars:
+                # determine local paths
+                scan_name = datetime.strftime(remote_radar['scan'])
+                temp_path = join(self.source_dir, scan_name)
+                scan_signature = scans.ScanSignature(scan_name=scan_name)
+                scan_path = scan_signature.get_scanpath()
+
+                # check if already retrieved
+                if exists(scan_path):
+                    logging.debug('%s already in radar dir.', scan_name)
+                    continue
+                if exists(temp_path):
+                    logging.debug(temp_path)
+                    logging.debug('%s already in source dir.', scan_name)
+                    continue
+
+                # attempt to retrieve
+                url = datetime.strftime(remote_radar['url'])
+                logging.debug('Trying to retrieve %s', url)
+                response = requests.get(url)
+                if response.status_code != 200:
+                    logging.debug('Retrieve of %s failed.', scan_name)
+                    continue
+
+                # save content to temporary directory
+                with open(temp_path, 'wb') as temp_file:
+                    temp_file.write(response.content)
+                    logging.debug('Retrieve of %s succeeded.', scan_name)
+
+                # count succesful retrievings
+                count += 1
+        return count
+
+
 def sync_and_wait_for_files(dt_calculation, td_wait=None, sleep=10):
     """
     Return if files are present or utcnow > dt_files + td_wait
@@ -165,11 +207,25 @@ def sync_and_wait_for_files(dt_calculation, td_wait=None, sleep=10):
 
     # keep walking the source dir until all
     # files are found or the timeout expires.
+
+    # old style ftp imports
     ftp_importer = FtpImporter(datetime=dt_calculation)
+
+    # new style http and maybe other imports
+    remote_file_retriever = RemoteFileRetriever(
+        remote_radars=config.REMOTE_RADARS,
+        source_dir=config.SOURCE_DIR,
+    )
+
     while True:
+        # retrieve from ftp sources
         fetched = ftp_importer.fetch()
         if fetched:
-            logging.info('Fetched {} files from FTP.'.format(len(fetched)))
+            logging.info('Fetched %s files from FTP.', len(fetched))
+        # retrieve from http sources
+        retrieved = remote_file_retriever.retrieve('1h')
+        if fetched:
+            logging.info('Retrieved %s remote files.', retrieved)
 
         set_names = set()
         for name in os.listdir(config.SOURCE_DIR):
@@ -204,30 +260,3 @@ def sync_and_wait_for_files(dt_calculation, td_wait=None, sleep=10):
 
     ftp_importer.close()
     return False
-
-
-RemoteFile = collections.namedtuple('RemoteFile', ['rpath', 'lname'])
-
-
-class RemoteFileGenerator(object):
-    def __init__(self, text):
-        self.period = periods.Period(text)
-
-    def __iter__(self):
-        for datetime in self.period:
-            for remote_file in config.REMOTE_RADARS:
-                rpath = datetime.strftime(remote_file['remote'])
-                lname = datetime.strftime(remote_file['local'])
-                yield RemoteFile(rpath=rpath, lname=lname)
-
-
-class RemoteFileRetriever(object):
-    """ Contain a lot of protocol specific retriever methods. """
-    def retrieve(self, remote_file):
-        print(remote_file)
-
-
-remote_file_generator = RemoteFileGenerator('15m')
-remote_file_retriever = RemoteFileRetriever()
-for remote_file in remote_file_generator:
-    remote_file_retriever.retrieve(remote_file)
