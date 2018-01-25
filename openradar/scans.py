@@ -50,7 +50,7 @@ PATTERNS = (
     ),
     # Jabbeke on FTP
     re.compile(
-        'T_PAGZ42_C_EBUM_(?P<timestamp>[0-9]{14})\.hdf',
+        'T_PAGW42_C_EBUM_(?P<timestamp>[0-9]{14})\.hdf',
     )
 )
 
