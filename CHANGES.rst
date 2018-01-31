@@ -9,7 +9,7 @@ Changelog of openradar
 
 - Added basic auth support and verification flag for remote radars.
 
-- Bumped radar to 0.2.7.
+- Bumped radar to 0.2.8.
 
 
 0.4.1 (2017-12-29)
