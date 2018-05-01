@@ -128,6 +128,7 @@ Cronjobs on production server
     13     * *   *   *   /srv/openradar/bin/cleanup
     */5    * *   *   *   /srv/openradar/bin/master
     43     * *   *   *   /srv/openradar/bin/sync  # synops is last written at about 38!
+    */10   * *   *   *   /srv/openradar/bin/sync_ground
     # Remove old things
     11     * *   *   *   find /srv/openradar/var/nowcast_multiscan -mmin +59 -delete
     12     * *   *   *   find /srv/openradar/var/nowcast_aggregate -mmin +59 -delete

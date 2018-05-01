@@ -9,7 +9,9 @@ Changelog of openradar
 
 - Added basic auth support and verification flag for remote radars.
 
-- Bumped radar to 0.2.8.
+- Add script to sync ground stations.
+
+- Bumped radar to 0.3.1.
 
 
 0.4.1 (2017-12-29)
