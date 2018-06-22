@@ -45,7 +45,7 @@ DECLUTTER_SIZE = 4
 DWD_RADARS = ('ess', 'nhb', 'emd', 'ase')  # ess is sometimes called ase
 KNMI_RADARS = ('NL61', 'NL62')
 JABBEKE_RADARS = ('JAB',)
-ALL_RADARS = DWD_RADARS + KNMI_RADARS + JABBEKE_RADARS
+ALL_RADARS = DWD_RADARS + KNMI_RADARS
 
 # New DWD files have an id that corresponds to the radar code
 RADAR_ID = {
