@@ -11,7 +11,9 @@ Changelog of openradar
 
 - Add script to sync ground stations.
 
-- Bumped radar to 0.3.4.
+- Bumped radar to 0.3.5.
+
+- Use new clutterfile.
 
 
 0.4.1 (2017-12-29)
