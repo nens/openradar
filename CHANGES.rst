@@ -2,7 +2,7 @@ Changelog of openradar
 ===================================================
 
 
-0.4.2 (unreleased)
+0.4.2 (2018-07-10)
 ------------------
 
 - Created workaround for quirky opendata service.
