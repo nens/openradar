@@ -5,7 +5,11 @@ Changelog of openradar
 0.4.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Used dwd asb.
+
+- Used new clutterfile.
+
+- Bumped radar to 0.3.6.
 
 
 0.4.2 (2018-07-10)
