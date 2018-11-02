@@ -37,18 +37,25 @@ LOG_DIR = os.path.join(BUILDOUT_DIR, 'var', 'log')
 NODATAVALUE = -9999
 
 # Declutter defaults
-DECLUTTER_FILEPATH = 'clutter-20170701-20180630.h5'
+DECLUTTER_FILEPATH = 'clutter-20171001-20180930.h5'
 DECLUTTER_HISTORY = 0.1
 DECLUTTER_SIZE = 4
 
 # Radar codes
-DWD_RADARS = ('ess', 'nhb', 'emd', 'ase')  # ess is sometimes called ase
+DWD_RADARS = (
+    'ess',
+    'nhb',
+    'emd',
+    'ase',  # ess seems to be called ase in archived files
+    'asb',  # recommended replacement for retired emd since jan 2018
+)
 KNMI_RADARS = ('NL61', 'NL62')
 JABBEKE_RADARS = ('JAB',)
 ALL_RADARS = DWD_RADARS + KNMI_RADARS
 
 # New DWD files have an id that corresponds to the radar code
 RADAR_ID = {
+    'asb': '10103',
     'emd': '10204',
     'ess': '10410',
     'nhb': '10605',
@@ -86,17 +93,18 @@ DWD_COORDINATES = dict(
     emd=(53.33871596412482, 7.023769628293414),
     ess=(51.405659776445475, 6.967144448033989),
     nhb=(50.1097523464156, 6.548542364687092),
+    asb=(53.564011, 6.748292),
 )
 
-# Radar altitudes
-# To be merged and stored in km.
+# Radar altitudes in meters above MSL
 ANTENNA_HEIGHT = dict(
+    asb=50.00,  # estimate
     ase=185.10,
     emd=58.00,
     ess=185.10,
     nhb=585.15,
-    NL61=51,
-    NL62=50,  # not true!!!
+    NL61=51.0,
+    NL62=50.0,  # estimate
 )
 
 # KNMI scan selection
