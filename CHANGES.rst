@@ -5,7 +5,7 @@ Changelog of openradar
 0.4.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Bumped radar to 0.3.7.
 
 
 0.4.3 (2018-11-02)
