@@ -124,16 +124,24 @@ Cronjobs on production server
     @reboot              /srv/openradar/bin/supervisord
     1      7 *   *   *   /srv/openradar/bin/supervisorctl restart celery
     2      7 *   *   *   /srv/openradar/bin/sync_radar_to_ftp  # repairs missed ftp pubs
+
     # production and cleanup
-    13     * *   *   *   /srv/openradar/bin/cleanup
+    # m  h      dom mon dow command
     */5    * *   *   *   /srv/openradar/bin/master
+    13     * *   *   *   /srv/openradar/bin/cleanup
     43     * *   *   *   /srv/openradar/bin/sync  # only Evap and Eps
     */10   * *   *   *   /srv/openradar/bin/sync_ground
+
     # Remove old things
     11     * *   *   *   find /srv/openradar/var/nowcast_multiscan -mmin +59 -delete
     12     * *   *   *   find /srv/openradar/var/nowcast_aggregate -mmin +59 -delete
     13     * *   *   *   find /srv/openradar/var/nowcast_calibrate -mmin +59 -delete
     14     7 *   *   *   find /mnt/fews-g/data-archive/img -mtime +3 -delete
+
+    # extra cleanups (heavy KNMI volumes)
+    # m    h dom mon dow command
+    13     * *   *   *   find /119-fs-c01/regenrprod/radar/NL61 -mtime +7 -delete
+    13     * *   *   *   find /119-fs-c01/regenrprod/radar/NL62 -mtime +7 -delete
 
 
 Product table
