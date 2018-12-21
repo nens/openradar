@@ -2,7 +2,7 @@ Changelog of openradar
 ===================================================
 
 
-0.4.6 (unreleased)
+0.4.6 (2018-12-21)
 ------------------
 
 - Bugfix on previous png writing.
