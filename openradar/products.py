@@ -550,7 +550,7 @@ class CalibratedProduct(object):
 
         Only for realtime five minute products.
         """
-        return self.__cls__(
+        return self.__class__(
             prodcode=self.prodcode,
             timeframe=self.timeframe,
             datetime=self.datetime - config.TIMEFRAME_DELTA[self.timeframe],
