@@ -5,7 +5,7 @@ Changelog of openradar
 0.4.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Bugfix.
 
 
 0.4.5 (2018-12-21)

@@ -156,10 +156,14 @@ class Publisher(object):
 
     def publish_image(self, cascade=False):
         """ Publish to geotiff image for webviewer. """
-        for publication in self.image_publications():
-            images.create_png_for_animated_gif(publication)
-            # also process the previous one to reduce the flickering
-            images.create_png_for_animated_gif(publication.previous())
+        publications = list(self.image_publications())
+
+        # if this is the normal operational image, add the previous one to
+        # reduce flicker
+        if len(publications) == 1:
+            publications.append(publications[0].previous())
+
+        images.create_png_for_animated_gif(publications)
 
     def publish_ftp(self, cascade=False, overwrite=True):
         """ Publish to FTP configured in config. """
