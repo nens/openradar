@@ -2,7 +2,7 @@ Changelog of openradar
 ===================================================
 
 
-0.4.5 (unreleased)
+0.4.5 (2018-12-21)
 ------------------
 
 - Write the previous png to reduce flickering.
