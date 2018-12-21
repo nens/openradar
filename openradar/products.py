@@ -544,6 +544,18 @@ class CalibratedProduct(object):
     def __unicode__(self):
         return self.path
 
+    def previous(self):
+        """
+        Return product that comes before this one timewise.
+
+        Only for realtime five minute products.
+        """
+        return self.__cls__(
+            prodcode=self.prodcode,
+            timeframe=self.timeframe,
+            datetime=self.datetime - config.TIMEFRAME_DELTA[self.timeframe],
+        )
+
 
 class ConsistentProduct(object):
     """ Conisitified products are usually created by the consistifier. """
