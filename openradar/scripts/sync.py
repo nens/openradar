@@ -30,7 +30,7 @@ def ftp_sync(source, target):
     copied = 0
 
     # Get the lists
-    source_names = source.nlst()
+    source_names = [n for n in source.nlst() if not n.startswith('.')]
     target_names = target.nlst()
 
     # Delete files in target that are not in source

@@ -9,6 +9,8 @@ Changelog of openradar
 
 - Bumped radar to 0.3.8.
 
+- Skip dotfiles in FTP sync source.
+
 
 0.4.6 (2018-12-21)
 ------------------
