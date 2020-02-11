@@ -12,23 +12,21 @@ install_requires = [
     'celery',
     'celery[redis]',
     'ciso8601',
-    'gdal',
-    'h5py>=2.3.1',
+    'h5py==2.6.0',
     'matplotlib',
     'numpy',
     'pandas',
-    'psycopg2',
+    'psycopg2-binary',
+    'pygdal==2.2.3.*',
     'pytz',
     'redis',
     'requests',
     'rpy2',
-    'scipy>=0.13.3',
-    'setuptools',
-    'supervisor',
+    'scipy',
+    # 'setuptools',
     ],
 
-tests_require = [
-    ]
+tests_require = ["flake8", "ipdb", "ipython", "pytest", "pytest-cov"]
 
 setup(name='openradar',
       version=version,

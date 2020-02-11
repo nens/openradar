@@ -24,42 +24,65 @@ near-real-time data product thus should give more reliable data as more data
 has arrived at that time. The aggregates (hourly and daily) are also used to 
 calibrate the 5 minute data.
 
-Installation
-------------
-Install using system repositories (e.g. apt-get, brew, pacman)::
 
-    $ sudo apt-get install <<EOF
-    python-gdal
-    python-matplotlib
-    python-pandas
-    python-psycopg2
-    python-rpy2
-    python-scipy
-    python-tornado
-    redis-server
-    libgeos-dev
-    libhdf5-serial-dev
-    libnetcdf-dev
+Development installation
+------------------------
+
+For development, you can use a docker-compose setup::
+
+    $ docker-compose build --build-arg uid=`id -u` --build-arg gid=`id -g` lib
+    $ docker-compose up --no-start
+    $ docker-compose start
+    $ docker-compose exec lib bash
+
+Create & activate a virtualenv::
+
+    (docker)$ virtualenv --system-site-packages .venv
+    (docker)$ source bin/activate
+
+Install stuff and run the tests::
+
+    (docker)(virtualenv)$ pip install -r requirements.txt --index-url https://packages.lizard.net
+    (docker)(virtualenv)$ pytest
+
+Update packages::
+    
+    (docker)$ rm -rf .venv
+    (docker)$ virtualenv --system-site-packages .venv
+    (docker)$ source bin/activate
+    (docker)(virtualenv)$ pip install -e .[test] --index-url https://packages.lizard.net
+    (docker)(virtualenv)$ pip freeze > requirements.txt
+
+
+Server installation
+-------------------
+
+Global dependencies (apt)::
+
+    git
     imagemagick
-    # type EOF and press Enter
+    libgdal-dev
+    libhdf5-serial-dev
+    locales
+    python3-pip
+    python3-rpy2
+    redis-server
 
 Then, to install the 'gstat' package, in the R interpreter::
     
     > install.packages('gstat')
 
-The standard buildout deployment::
-    
-    $ pip install zc.buildout
-    $ buildout
+Finally, the python part::
+    $ sudo pip3 install --upgrade pip virtualenv
+    $ virtualenv --system-site-packages .venv
+    $ source bin/activate
+    (virtualenv)$ pip install -r requirements.txt --index-url https://packages.lizard.net
 
-Then to setup the radar server production use, for Nelen & Schuurmans
-the easiest way is to clone the nens/radar repository as development
-package and symlink the necessary configuration files::
-    
-    $ bin/develop checkout radar
-    $ bin/buildout  # Again, yes.
-    $ ln -s ../src/radar/misc var/misc
-    $ ln -s ../src/radar/radar/productionconfig.py openradar/localconfig.py
+
+Use symbolic links to link to external var/misc and localconfig files.
+
+# TODO running celery on server and in development
+
 
 Scripts
 -------
@@ -72,10 +95,12 @@ any rescaled products as well.'
 
 TODO: cover sync* scripts and partial scripts here, too.
 
+
 Timezone
 --------
 Timezones:
 - The time zones for all of the data is in UTC time.
+
 
 Clutter filter
 --------------
@@ -86,6 +111,7 @@ To update the clutter filter, execute this command::
 Put this file in the misc directory and update DECLUTTER_FILEPATH to
 point to this file. The basename is enough, but an absolute path will
 probably work, too.
+
 
 Troubleshooting
 ---------------
