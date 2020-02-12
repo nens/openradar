@@ -14,11 +14,12 @@ RUN apt-get update && apt-get install -y \
     git \
     imagemagick \
     libgdal-dev \
+    libhdf5-serial-dev \
     locales \
     python3-grib \
     python3-pip \
     python3-rpy2 \
-    libhdf5-serial-dev \
+    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen en_US.UTF-8

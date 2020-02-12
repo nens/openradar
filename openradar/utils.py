@@ -453,6 +453,8 @@ def save_attrs(h5, attrs):
             group = h5.create_group(key)
             save_attrs(h5=group, attrs=value)
             continue
+        if hasattr(value, 'encode'):
+            value = value.encode('ascii')
         h5.attrs[key] = np.array([value])
 
 
@@ -560,6 +562,15 @@ def save_dataset(data, meta, path):
         dataset[...] = value.filled(config.NODATAVALUE)
 
     for name, value in meta.items():
+        if hasattr(value, 'encode'):
+            value = value.encode('ascii')
+        elif isinstance(value, list):
+            value = [
+                e.encode('ascii')
+                if hasattr(e, 'encode')
+                else e
+                for e in value
+            ]
         h5.attrs[name] = value
 
     h5.close()

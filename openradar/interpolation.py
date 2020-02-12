@@ -1,6 +1,7 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 # no utf-8 encoding stuff yet. CSV library becomes a nuisance
 
+import csv
 import logging
 import os
 import zipfile

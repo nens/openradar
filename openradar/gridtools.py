@@ -120,8 +120,8 @@ class BaseGrid(object):
 
         It has our size, extent and projection.
         """
-        dataset = gdal.GetDriverByName(b'MEM').Create(
-            b'', self.size[0], self.size[1], bands, datatype,
+        dataset = gdal.GetDriverByName('MEM').Create(
+            '', self.size[0], self.size[1], bands, datatype,
         )
         dataset.SetGeoTransform(self.get_geotransform())
         dataset.SetProjection(self.projection)
@@ -152,14 +152,14 @@ class AbstractLayer(BaseGrid):
 
     def _save_tif(self, filepath, rgba=True):
         dataset = self._rgba_dataset() if rgba else self._single_band_dataset()
-        gdal.GetDriverByName(b'GTiff').CreateCopy(
+        gdal.GetDriverByName('GTiff').CreateCopy(
             str(filepath), dataset, 0, ['COMPRESS=DEFLATE'],
         )
 
     def _save_asc(self, filepath):
         """ Save as asc file. """
         dataset = self._single_band_dataset()
-        gdal.GetDriverByName(b'AAIGrid').CreateCopy(filepath, dataset)
+        gdal.GetDriverByName('AAIGrid').CreateCopy(filepath, dataset)
 
     def _rgba_dataset(self):
         dataset = self.create_dataset(bands=4, datatype=gdalconst.GDT_Byte)

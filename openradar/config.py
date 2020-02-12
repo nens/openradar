@@ -57,7 +57,7 @@ RADAR_ID = {
 }
 
 CALIBRATION_PATTERN = re.compile(
-    'GEO *= *(?P<a>[-.0-9]+) *\* *PV *\+ *(?P<b>[-.0-9]+)',
+    b'GEO *= *(?P<a>[-.0-9]+) *\* *PV *\+ *(?P<b>[-.0-9]+)',
 )
 
 # Timestamp Templates

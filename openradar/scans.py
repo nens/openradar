@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 
+from datetime import datetime as Datetime
+from datetime import timedelta as Timedelta
+from functools import reduce
+import json
+import logging
+import os
+import re
+import shutil
+
+from scipy import interpolate
+import h5py
+import numpy as np
+
+from openradar import calc
 from openradar import config
 from openradar import io
 from openradar import utils
 from openradar import gridtools
-
-from scipy import interpolate
-
-from datetime import datetime as Datetime
-from datetime import timedelta as Timedelta
-
-import h5py
-import json
-import logging
-import numpy as np
-import os
-import re
-import shutil
 
 BAND_RAIN = 1
 BAND_RANG = 2
@@ -33,7 +34,7 @@ BAND_META = {
 PATTERNS = (
     # KNMI
     re.compile(
-        'RAD_(?P<code>.*)_VOL_NA_(?P<timestamp>[0-9]{12})\.h5',
+        'RAD_(?P<code>.*)_VOL_NA_(?P<timestamp>[0-9]{12})\.h5',  # NOQA
     ),
     # DWD archive
     re.compile(
@@ -45,7 +46,7 @@ PATTERNS = (
     ),
     # Jabbeke on FTP
     re.compile(
-        'T_PAGW42_C_EBUM_(?P<timestamp>[0-9]{14})\.hdf',
+        'T_PAGW42_C_EBUM_(?P<timestamp>[0-9]{14})\.hdf',  # NOQA
     )
 )
 
@@ -64,6 +65,7 @@ def create_basegrid(extent, cellsize):
         size=size,
         projection=projection,
     )
+
 
 BASEGRID = create_basegrid(config.COMPOSITE_EXTENT, config.COMPOSITE_CELLSIZE)
 NOWCASTGRID = create_basegrid(config.NOWCAST_EXTENT, config.NOWCAST_CELLSIZE)
@@ -437,7 +439,7 @@ class ScanDWD(GenericScan):
     def data(self, path=None):
         """ Return data dict for further processing. """
         scanpath = self.signature.get_scanpath()
-        dBZ, meta = io.readDX(scanpath)
+        dBZ, meta = io.read_dx(scanpath)
 
         return dict(
             latlon=self._latlon(),
@@ -568,7 +570,7 @@ class MultiScan(object):
             # Data
             data = source_band.ReadAsArray()
             target_band = target.create_dataset(
-                source_band.GetMetadataItem(b'name'),
+                source_band.GetMetadataItem('name'),
                 data.shape,
                 dtype='f4',
                 compression='gzip',
@@ -860,7 +862,7 @@ class Composite(object):
 
         logging.info('Created composite {}: {}'.format(
             self.multiscan.multiscandatetime.strftime('%Y-%m-%d %H:%M:%S'),
-            ', '.join(json.loads(dataset.GetMetadataItem(b'stations'))),
+            ', '.join(json.loads(dataset.GetMetadataItem('stations'))),
         ))
 
         return dataset
@@ -959,7 +961,8 @@ class Aggregate(object):
 
     def _check(self, h5):
         """ Return if h5 is consistent with requested parameters. """
-        if set(h5.attrs['radars']) != set(self.radars):
+        h5_radars = [e.decode('ascii') for e in h5.attrs['radars']]
+        if set(h5_radars) != set(self.radars):
             # Aggregate was made for a different set of radars
             raise ValueError('Unmatched radarset in existing aggregate')
         if h5.attrs['declutter_history'] != self.declutter['history']:
@@ -1013,9 +1016,9 @@ class Aggregate(object):
             [str(radar)
              for radar in json.loads(composite_meta['requested_stations'])],
         )
-        radar_list = zip(json.loads(composite_meta['stations']),
-                         json.loads(composite_meta['ranges']),
-                         json.loads(composite_meta['locations']))
+        radar_list = list(zip(json.loads(composite_meta['stations']),
+                              json.loads(composite_meta['ranges']),
+                              json.loads(composite_meta['locations'])))
         locations_dict = {rad: loc for rad, rng, loc in radar_list}
         ranges_dict = {rad: rng for rad, rng, loc in radar_list}
 

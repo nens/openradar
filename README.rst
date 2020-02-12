@@ -38,7 +38,7 @@ For development, you can use a docker-compose setup::
 Create & activate a virtualenv::
 
     (docker)$ virtualenv --system-site-packages .venv
-    (docker)$ source bin/activate
+    (docker)$ source .venv/bin/activate
 
 Install stuff and run the tests::
 
@@ -49,7 +49,7 @@ Update packages::
     
     (docker)$ rm -rf .venv
     (docker)$ virtualenv --system-site-packages .venv
-    (docker)$ source bin/activate
+    (docker)$ source .venv/bin/activate
     (docker)(virtualenv)$ pip install -e .[test] --index-url https://packages.lizard.net
     (docker)(virtualenv)$ pip freeze > requirements.txt
 

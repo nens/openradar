@@ -18,7 +18,7 @@ from openradar import utils
 
 
 # vvv Fix for celery forking problem
-os.environ['PYTHONPATH'] = ':'.join(sys.path)
+# os.environ['PYTHONPATH'] = ':'.join(sys.path)
 
 # Configure celery
 app = celery.Celery()

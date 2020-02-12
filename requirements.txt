@@ -33,7 +33,6 @@ matplotlib==3.1.3
 mccabe==0.6.1
 more-itertools==8.2.0
 numpy==1.13.3
--e git+git@github.com:nens/openradar@93790166b0c10fe210ebf8f9c70e1689593286d5#egg=openradar
 packaging==20.1
 pandas==1.0.1
 parso==0.6.1
@@ -73,3 +72,4 @@ vine==1.3.0
 virtualenv==20.0.1
 wcwidth==0.1.8
 zipp==2.2.0
+-e .[test]
