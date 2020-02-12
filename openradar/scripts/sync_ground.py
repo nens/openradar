@@ -4,11 +4,6 @@
 Sync groundstations to a flat mirror and place new files atomically in an
 import directory.
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-
 from os.path import basename, join
 from urlparse import urljoin
 

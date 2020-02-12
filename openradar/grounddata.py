@@ -5,11 +5,6 @@ Created on Tue Feb 18 14:44:37 2014
 Tom van Steijn, RHDHV
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-
 import datetime as dt
 
 import psycopg2

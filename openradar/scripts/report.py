@@ -7,11 +7,6 @@ Created on Wed Feb 12 16:10:32 2014
 Tom van Steijn, RHDHV
 """
 
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-from __future__ import division
-
 import datetime as dt
 import glob
 import logging
