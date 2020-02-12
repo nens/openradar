@@ -27,7 +27,7 @@ from openradar import utils
 from openradar import gridtools
 from openradar import scans
 
-PROJECTION_RD_WKT = osr.GetUserInputAsWKT(b'epsg:28992')
+PROJECTION_RD_WKT = osr.GetUserInputAsWKT('epsg:28992')
 
 
 def data_image(masked_array, max_rain=20, threshold=0.0):
@@ -215,7 +215,7 @@ def create_tif(products, image_dir=None, **kwargs):
         )
         path = os.path.join(target_dir, filename)
 
-        driver = gdal.GetDriverByName(b'gtiff')
+        driver = gdal.GetDriverByName('gtiff')
         driver.CreateCopy(path, mem)
 
         logging.info('saved {}.'.format(os.path.basename(path)))

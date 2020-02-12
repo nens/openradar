@@ -7,31 +7,31 @@ from __future__ import absolute_import
 from __future__ import division
 
 import datetime
-import os
 import re
 
-# Directories
-BUILDOUT_DIR = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    '..',
-)
+import pathlib
+
+# directories
+PACKAGE_DIR = pathlib.Path(__file__).parent.parent
+SOURCE_DIR = PACKAGE_DIR / "var" / "source"
+LOG_DIR = PACKAGE_DIR / "var" / "log"
+
+# make sure they exist - there must be a better way
+SOURCE_DIR.mkdir(parents=True, exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # Likely to be overwritten
-AGGREGATE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'aggregate')
-CALIBRATE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'calibrate')
-CONSISTENT_DIR = os.path.join(BUILDOUT_DIR, 'var', 'consistent')
-IMG_DIR = os.path.join(BUILDOUT_DIR, 'var', 'img')
-MISC_DIR = os.path.join(BUILDOUT_DIR, 'var', 'misc')
-MULTISCAN_DIR = os.path.join(BUILDOUT_DIR, 'var', 'multiscan')
-NOWCAST_AGGREGATE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'nowcast_aggregate')
-NOWCAST_CALIBRATE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'nowcast_calibrate')
-NOWCAST_MULTISCAN_DIR = os.path.join(BUILDOUT_DIR, 'var', 'nowcast_multiscan')
-RADAR_DIR = os.path.join(BUILDOUT_DIR, 'var', 'radar')
-REPORT_DIR = os.path.join(BUILDOUT_DIR, 'var', 'report')
-SOURCE_DIR = os.path.join(BUILDOUT_DIR, 'var', 'source')
-
-# Unlikely to be overwritten
-LOG_DIR = os.path.join(BUILDOUT_DIR, 'var', 'log')
+AGGREGATE_DIR = PACKAGE_DIR / 'var' / 'aggregate'
+CALIBRATE_DIR = PACKAGE_DIR / 'var' / 'calibrate'
+CONSISTENT_DIR = PACKAGE_DIR, 'var', 'consistent'
+IMG_DIR = PACKAGE_DIR / 'var' / 'img'
+MISC_DIR = PACKAGE_DIR / 'var' / 'misc'
+MULTISCAN_DIR = PACKAGE_DIR / 'var' / 'multiscan'
+NOWCAST_AGGREGATE_DIR = PACKAGE_DIR / 'var' / 'nowcast_aggregate'
+NOWCAST_CALIBRATE_DIR = PACKAGE_DIR / 'var' / 'nowcast_calibrate'
+NOWCAST_MULTISCAN_DIR = PACKAGE_DIR / 'var' / 'nowcast_multiscan'
+RADAR_DIR = PACKAGE_DIR / 'var' / 'radar'
+REPORT_DIR = PACKAGE_DIR / 'var' / 'report'
 
 # Default nodatavalue
 NODATAVALUE = -9999
@@ -157,11 +157,7 @@ REMOTE_RADARS = []
 # Throughputs of radar related data to client ftp.
 FTP_THROUGH = {}
 
-# redis host for mtime cache and turn locking system
-REDIS_HOST = 'localhost'
-REDIS_DB = 0
-
-CELERY_BROKER_URL = 'redis://localhost'  # until rmq better understood
+CELERY_BROKER_URL = 'redis://redis'
 
 # Import local settings
 try:
