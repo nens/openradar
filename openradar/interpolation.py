@@ -42,10 +42,10 @@ class DataLoader(object):
         self.basegrid = gridtools.BaseGrid(
             extent=self.dataset.attrs['grid_extent'],
             projection=self.dataset.attrs['grid_projection'],
-            size=self.dataset.attrs['grid_size']
+            size=self.dataset.attrs['grid_size'].tolist(),
         )
         # Read csv file
-        self.stationsdata = self.read_csv(metafile.encode('utf-8'))
+        self.stationsdata = self.read_csv(metafile)
 
     @classmethod
     def read_csv(cls, filename):

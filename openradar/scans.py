@@ -1058,12 +1058,15 @@ class Aggregate(object):
         """
         Return h5_dataset by merging iterable of aggregate objects.
         """
-        iterable = iter(map(make_aggregate, aggregates))
+        iterable = map(make_aggregate, aggregates)
 
-        aggregate = iterable.next()
+        aggregate = next(iterable)
         h5 = aggregate.get()
 
         meta = dict(h5.attrs)
+
+        utils.convert_to_lists_and_unicode(meta)
+
         available = [meta['available']]
 
         array = h5['precipitation']
@@ -1088,8 +1091,9 @@ class Aggregate(object):
             for i in range(len(meta['radars'])):
                 if meta['ranges'][i] == config.NODATAVALUE:
                     meta['ranges'][i] = h5.attrs['ranges'][i]
-                if (meta['locations'][i] == 2 * [config.NODATAVALUE]).all():
-                    meta['locations'][i] = h5.attrs['locations'][i]
+                location = meta["locations"][i]
+                if meta['locations'][i] == 2 * [config.NODATAVALUE]:
+                    meta['locations'][i] = h5.attrs['locations'][i].tolist()
 
             available.append(meta['available'])
 

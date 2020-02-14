@@ -13,9 +13,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     git \
     imagemagick \
-    libgdal-dev \
     libhdf5-serial-dev \
     locales \
+    python3-gdal \
     python3-grib \
     python3-pip \
     python3-rpy2 \

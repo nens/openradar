@@ -5,7 +5,6 @@ from functools import reduce
 
 import ciso8601
 import codecs
-import csv
 import datetime
 import h5py
 import logging
@@ -493,14 +492,20 @@ def save_dataset(data, meta, path):
 
     # Overview group
     availables = meta['available']
-    availables_any = availables.any(0) if availables.ndim == 2 else availables
+    try:
+        availables_any = [any(r) for r in zip(*availables)]
+    except TypeError:
+        availables_any = availables
     products_missing = str(', '.join(
         [radar
          for radar, available in zip(meta['radars'], availables_any)
          if not available],
     ))
+    timestamp_last_composite = meta['timestamp_last_composite']
+    if hasattr(timestamp_last_composite, "decode"):
+        timestamp_last_composite = timestamp_last_composite.decode("ascii")
     product_datetime_start = (timestamp2datetime(
-        meta['timestamp_last_composite'],
+        timestamp_last_composite,
     ) + config.TIMEFRAME_DELTA['f']).strftime('%d-%b-%Y;%H:%M:%S.%f').upper()
     product_datetime_end = product_datetime_start
 
@@ -604,3 +609,23 @@ def parse_datetime(text):
         # ciso8601 requires at least months to be specified
         return ciso8601.parse_datetime_unaware(text + '01')
     return ciso8601.parse_datetime_unaware(text)
+
+
+def convert_to_lists_and_unicode(meta):
+    """ Updates dict. Return None. """
+    for k, v in meta.items():
+        # numpy array
+        if hasattr(v, 'size'):
+            if v.size == 0:
+                meta[k] = []
+            elif v.size == 1:
+                meta[k] = v.item()
+            else:
+                meta[k] = [
+                    e.decode('ascii')
+                    if hasattr(e, 'decode') else e
+                    for e in v.tolist()
+                ]
+        # bytes
+        elif hasattr(v, 'decode'):
+            meta[k] = v.decode('ascii')

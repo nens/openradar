@@ -18,7 +18,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 # Likely to be overwritten
 AGGREGATE_DIR = PACKAGE_DIR / 'var' / 'aggregate'
 CALIBRATE_DIR = PACKAGE_DIR / 'var' / 'calibrate'
-CONSISTENT_DIR = PACKAGE_DIR, 'var', 'consistent'
+CONSISTENT_DIR = PACKAGE_DIR / 'var' / 'consistent'
 IMG_DIR = PACKAGE_DIR / 'var' / 'img'
 MISC_DIR = PACKAGE_DIR / 'var' / 'misc'
 MULTISCAN_DIR = PACKAGE_DIR / 'var' / 'multiscan'

@@ -429,8 +429,7 @@ class CalibratedProduct(object):
             cal_stations = [rs for rs in dataloader.rainstations
                             if not rs.measurement == -999.]
             data_count = len(cal_stations)
-            cal_station_ids = np.array([rs.station_id for rs in cal_stations],
-                                       dtype='S20')
+            cal_station_ids = [rs.station_id for rs in cal_stations]
             cal_station_coords = [(rs.lon, rs.lat) for rs in cal_stations]
             cal_station_measurements = [rs.measurement for rs in cal_stations]
             logging.info('{} out of {} gauges have data for {}.'.format(
@@ -493,6 +492,9 @@ class CalibratedProduct(object):
                                (1 - mask) * interpolator.precipitation)
 
         self.metadata = dict(dataloader.dataset.attrs)
+            
+        utils.convert_to_lists_and_unicode(self.metadata)
+
         dataloader.dataset.close()
         # Append metadata about the calibration
         self.metadata.update(dict(
@@ -601,6 +603,9 @@ class ConsistentProduct(object):
             data = dict(precipitation=np.ma.array(data, mask=mask) * factor)
             meta = dict(h5.attrs)
             meta.update(consistent_with=consistent_with)
+
+        utils.convert_to_lists_and_unicode(meta)
+
         utils.save_dataset(
             data=data,
             meta=meta,

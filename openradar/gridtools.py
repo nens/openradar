@@ -269,7 +269,7 @@ class VectorLayer(AbstractLayer):
         backend_agg.FigureCanvasAgg(fig)
 
         rect, axis = self._mpl_config()
-        axes = fig.add_axes(rect, axisbg='y')
+        axes = fig.add_axes(rect, facecolor='y')
         axes.axis(axis)
         axes.autoscale(False)
 

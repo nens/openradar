@@ -1,5 +1,5 @@
 openradar
-==========================================
+=========
 
 Radar
 -----
@@ -13,7 +13,7 @@ by using relevant radar stations of the neighbouring countries Belgium and Germa
 
 The project lives at http://nationaleregenradar.nl
 
-The master script ``bin/master`` organizes and aggregates data (if necessary), 
+The master script ``.venv/bin/master`` organizes and aggregates data (if necessary), 
 both radar and gauge (ground stations) data. The products are delivered 
 real-time, near-real-time and afterwards. Every product is delivered for
 different time-steps: 5 minutes, 1 hour and 24 hours. 
@@ -35,22 +35,25 @@ For development, you can use a docker-compose setup::
     $ docker-compose start
     $ docker-compose exec lib bash
 
-Create & activate a virtualenv::
+(Re)create & activate a virtualenv::
 
+    (docker)$ rm -rf .venv
     (docker)$ virtualenv --system-site-packages .venv
     (docker)$ source .venv/bin/activate
 
-Install stuff and run the tests::
+Install dependencies & package and run tests::
 
-    (docker)(virtualenv)$ pip install -r requirements.txt --index-url https://packages.lizard.net
+    (docker)(virtualenv)$ pip install -r requirements.txt
+    (docker)(virtualenv)$ pip install -e .[test]
     (docker)(virtualenv)$ pytest
 
-Update packages::
+Update requirements.txt::
     
     (docker)$ rm -rf .venv
     (docker)$ virtualenv --system-site-packages .venv
     (docker)$ source .venv/bin/activate
-    (docker)(virtualenv)$ pip install -e .[test] --index-url https://packages.lizard.net
+    (docker)(virtualenv)$ pip install .
+    (docker)(virtualenv)$ pip uninstall openradar --yes
     (docker)(virtualenv)$ pip freeze > requirements.txt
 
 
@@ -64,6 +67,7 @@ Global dependencies (apt)::
     libgdal-dev
     libhdf5-serial-dev
     locales
+    python3-gdal
     python3-pip
     python3-rpy2
     redis-server
@@ -72,11 +76,14 @@ Then, to install the 'gstat' package, in the R interpreter::
     
     > install.packages('gstat')
 
+And give "y" when appropriate.
+
 Finally, the python part::
+
     $ sudo pip3 install --upgrade pip virtualenv
     $ virtualenv --system-site-packages .venv
-    $ source bin/activate
-    (virtualenv)$ pip install -r requirements.txt --index-url https://packages.lizard.net
+    $ source .venv/bin/activate
+    (virtualenv)$ pip install -r requirements.txt
 
 
 Use symbolic links to link to external var/misc and localconfig files.
@@ -106,7 +113,7 @@ Clutter filter
 --------------
 To update the clutter filter, execute this command::
     
-    bin/clutter YYYYMMDD-YYYYMMDD -t ./my-clutter-file.h5
+    .venv/bin/clutter YYYYMMDD-YYYYMMDD -t ./my-clutter-file.h5
 
 Put this file in the misc directory and update DECLUTTER_FILEPATH to
 point to this file. The basename is enough, but an absolute path will
@@ -119,7 +126,7 @@ The realtime products are a good indication for the times at which
 master execution has not succesfully completed. To get a list of missing
 products in the past 7 days run::
 
-    $ bin/repair 7d
+    $ .venv/bin/repair 7d
 
 To get a hint about which masters to re-run.
 
@@ -127,36 +134,34 @@ Lately, there have been tasks hanging due to difficulties reaching or
 writing to a configured share. In that case, try to stop celery, kill
 any celery workers and start celery to see if the problem persists::
 
-    $ bin/supervisorctl shutdown
+    $ supervisorctl shutdown
 
     Actions to kill remaining celery workers...
 
-    $ bin/supervisord
+    $ supervisord
 
 In extreme cases you could purge the task queue, but chances are that
 the problem lies not in the tasks itself. It brings a lot of work to
 resubmit the lost tasks. Anyway::
 
-    $ bin/celery --app=openradar.tasks.app purge
+    $ .venv/bin/celery --app=openradar.tasks.app purge
 
 
 Cronjobs on production server
 -----------------------------
 
-::
-
     # m    h dom mon dow command
     # availability
-    @reboot              /srv/openradar/bin/supervisord
-    1      7 *   *   *   /srv/openradar/bin/supervisorctl restart celery
-    2      7 *   *   *   /srv/openradar/bin/sync_radar_to_ftp  # repairs missed ftp pubs
+    @reboot              /srv/openradar/.venv/bin/supervisord
+    1      7 *   *   *   /srv/openradar/.venv/bin/supervisorctl restart celery
+    2      7 *   *   *   /srv/openradar/.venv/bin/sync_radar_to_ftp  # repairs missed ftp pubs
 
     # production and cleanup
     # m  h      dom mon dow command
-    */5    * *   *   *   /srv/openradar/bin/master
-    13     * *   *   *   /srv/openradar/bin/cleanup
-    43     * *   *   *   /srv/openradar/bin/sync  # only Evap and Eps
-    */10   * *   *   *   /srv/openradar/bin/sync_ground
+    */5    * *   *   *   /srv/openradar/.venv/bin/master
+    13     * *   *   *   /srv/openradar/.venv/bin/cleanup
+    43     * *   *   *   /srv/openradar/.venv/bin/sync  # only Evap and Eps
+    */10   * *   *   *   /srv/openradar/.venv/bin/sync_ground
 
     # Remove old things
     11     * *   *   *   find /srv/openradar/var/nowcast_multiscan -mmin +59 -delete
