@@ -64,9 +64,7 @@ Global dependencies (apt)::
 
     git
     imagemagick
-    libgdal-dev
     libhdf5-serial-dev
-    locales
     python3-gdal
     python3-pip
     python3-rpy2
@@ -85,6 +83,7 @@ Finally, the python part::
     $ virtualenv --system-site-packages .venv
     $ source .venv/bin/activate
     (virtualenv)$ pip install -r requirements.txt
+    (virtualenv)$ pip install -e .
 
 
 Use symbolic links to link to external var/misc and localconfig files.
