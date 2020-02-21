@@ -5,6 +5,7 @@ services:
     build: .
     depends_on:
       - redis
+      - ftp
     environment:
       - DOCKER=True
       - PYTHONUNBUFFERED=1
@@ -16,3 +17,9 @@ services:
     command: tail -F anything
   redis:
     image: redis:3-alpine
+  ftp:
+    image: stilliard/pure-ftpd
+    environment:
+      FTP_USER_NAME: nrr
+      FTP_USER_PASS: nrr
+      FTP_USER_HOME: /home/nrr
