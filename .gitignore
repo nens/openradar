@@ -5,6 +5,7 @@ __pycache__
 openradar/local*
 
 # Local directories
+etc
 var
 
 # Configuration repository checkout

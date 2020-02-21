@@ -136,9 +136,6 @@ WAIT_EXPIRE_DELTA = datetime.timedelta(minutes=3)
 # Productcopy settings, for fews import, for example.
 COPY_TARGET_DIRS = []
 
-# Root path to opendap data, for retrieval only.
-OPENDAP_ROOT = 'http://opendap.nationaleregenradar.nl/thredds/dodsC/radar'
-
 # FTP settings
 # Publishing
 FTP_AGE = 7   # max age in days for files on ftp

@@ -171,14 +171,3 @@ class Publisher(object):
                 logging.info('FTP publishing complete.')
         else:
             logging.warning('FTP not configured, FTP publishing not possible.')
-
-    def publish_h5(self, cascade=False, merge=False):
-        """ Update thredds. """
-        for publication in self.publications(cascade=cascade):
-            products.ThreddsFile.get_for_product(
-                product=publication, merge=merge,
-            ).update(publication)
-
-    def publish_h5m(self, cascade=False, merge=True):
-        """ Same as publish_h5, but merge is true by default. """
-        self.publish_h5(cascade=cascade, merge=merge)

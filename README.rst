@@ -71,6 +71,7 @@ Global dependencies (apt)::
     python3-pip
     python3-rpy2
     redis-server
+    supervisor
 
 Then, to install the 'gstat' package, in the R interpreter::
     

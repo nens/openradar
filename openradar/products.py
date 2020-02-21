@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 
-import calendar
 import h5py
 import logging
 import numpy as np
@@ -13,312 +12,6 @@ from openradar import config
 from openradar import utils
 from openradar import scans
 from openradar.interpolation import DataLoader, Interpolator
-
-
-class ThreddsFile(object):
-    """
-    Contains a number of products in h5 format.
-
-    TODO Currently used to both write the files and retrieve the files from
-    thredds, common functionality must be abstracted later.
-    """
-    REALTIME = 2
-    NEARREALTIME = 3
-    AFTERWARDS = 4
-    ULTIMATE = 5
-    FLAGS = dict(r=REALTIME, n=NEARREALTIME, a=AFTERWARDS, u=ULTIMATE)
-
-    def __init__(self, datetime=None,
-                 timeframe=None, prodcode='r', merge=True):
-        """
-        Return a threddsfile object configured with an url attribute
-        that is suitable for use with opendap.
-        """
-        if datetime is None or timeframe is None:
-            # Create a bare thredds_file object,
-            # so get_for_product() does not break.
-            return
-
-        self.timeframe = timeframe
-        self.datetime = self._datetime(datetime)
-        self.timedelta = config.TIMEFRAME_DELTA[timeframe]
-        self.timesteps = self._timesteps()
-        self.prodcode = prodcode
-        self.merge = merge
-
-        basecode = config.PRODUCT_CODE[timeframe][prodcode]
-        if merge:
-            code = basecode.split('_')[0]
-        else:
-            code = basecode
-        self.url = utils.PathHelper(
-            basedir=config.OPENDAP_ROOT,
-            code=code,
-            template=config.PRODUCT_TEMPLATE,
-        ).path(self.datetime)
-
-    def _datetime(self, datetime):
-        """ Return the timestamp of the threddsfile. """
-        if self.timeframe == 'f':
-            return datetime.replace(day=1, hour=0,
-                                    minute=0, second=0, microsecond=0)
-        if self.timeframe == 'h':
-            return datetime.replace(month=1, day=1, hour=0,
-                                    minute=0, second=0, microsecond=0)
-        if self.timeframe == 'd':
-            year = datetime.year // 20 * 20
-            return datetime.replace(year=year, month=1, day=1, hour=0,
-                                    minute=0, second=0, microsecond=0)
-
-    def _timesteps(self):
-        """ Return the amount of timesteps in this ThreddsFile """
-        # Make a list of year, date tuples for use in monthrange.
-        years = dict(f=1, h=1, d=20)[self.timeframe]
-        months = dict(f=1, h=12, d=12)[self.timeframe]
-        yearmonths = []
-        for year in range(self.datetime.year,
-                          self.datetime.year + years):
-            for month in range(self.datetime.month,
-                               self.datetime.month + months):
-                yearmonths.append(dict(year=year, month=month))
-
-        # Calculate total amount of days in the file:
-        days = 0
-        for yearmonth in yearmonths:
-            days += calendar.monthrange(**yearmonth)[1]
-
-        return days * dict(f=288, h=24, d=1)[self.timeframe]
-
-    def _index(self, product):
-        """
-        Return the index for the time dimension for a product.
-
-        Rounding is because of uncertainties in the total_seconds() method.
-        """
-        return round((product.datetime -
-                      self.datetime).total_seconds() /
-                     self.timedelta.total_seconds())
-
-    def index(self, datetime):
-        """
-        Return the index for the time dimension for a datetime.
-
-        Clips to first and last element.
-        """
-        unclipped = int((datetime - self.datetime).total_seconds() /
-                        self.timedelta.total_seconds())
-        return min(max(unclipped, 0), self.timesteps - 1)
-
-    def _get_datetime_generator(self, start, end):
-        """
-        Return generator of datetimes for data at x, y.
-
-        Start, end are indexes.
-        """
-        for i in range(start, end + 1):
-            yield self.datetime + i * self.timedelta
-
-    def next(self):
-        """ Return thredds_file object that comes after this one in time. """
-        last = list(self._get_datetime_generator(
-            self.timesteps - 1, self.timesteps - 1)
-        )[0]
-        first_of_next = last + self.timedelta
-        return ThreddsFile(datetime=first_of_next,
-                           timeframe=self.timeframe,
-                           prodcode=self.prodcode,
-                           merge=self.merge)
-
-    def _time(self):
-        """ Return the fill for the time dataset. """
-        step = round(self.timedelta.total_seconds())
-        end = round(self.timesteps * step)
-        return np.ogrid[0:end:step]
-
-    @classmethod
-    def get_for_product(cls, product, merge=False):
-        """
-        Return ThreddsFile instance to which product belongs.
-
-        If merge == True, threddsfiles from all products are merged in
-        one threddsfile per timeframe. The avalailable variable will
-        contain a flag that refers to the product that was stored at a
-        particular time coordinate. The paths will be the same regardless
-        of the productcode, and the data will only be overwritten if
-        the new flag is equal or higher than the already existing flag.
-        The flags are:
-            2: Realtime
-            3: Near-realtime
-            4: Afterwards
-            5: Ultimate
-        """
-        thredds_file = cls()
-        thredds_file.timeframe = product.timeframe
-        thredds_file.datetime = thredds_file._datetime(product.datetime)
-        thredds_file.timedelta = config.TIMEFRAME_DELTA[product.timeframe]
-        thredds_file.timesteps = thredds_file._timesteps()
-
-        basecode = config.PRODUCT_CODE[product.timeframe][product.prodcode]
-        if merge:
-            code = basecode.split('_')[0]
-            thredds_file.flag = cls.FLAGS[product.prodcode]
-        else:
-            code = basecode
-            thredds_file.flag = 1
-
-        thredds_file.path = utils.PathHelper(
-            basedir=config.THREDDS_DIR,
-            code=code,
-            template=config.PRODUCT_TEMPLATE,
-        ).path(thredds_file.datetime)
-        return thredds_file
-
-    def create(self):
-        """ Return newly created threddsfile. """
-        utils.makedir(os.path.dirname(self.path))
-        h5 = h5py.File(self.path)
-
-        # East
-        east = scans.BASEGRID.get_grid()[0][0]
-        dataset = h5.create_dataset(
-            'east', east.shape, east.dtype,
-            compression='gzip', shuffle=True,
-        )
-        dataset[...] = east
-
-        # North
-        north = scans.BASEGRID.get_grid()[1][:, 0]
-        dataset = h5.create_dataset(
-            'north', north.shape, north.dtype,
-            compression='gzip', shuffle=True,
-        )
-        dataset[...] = north
-
-        # Time
-        time = h5.create_dataset(
-            'time', [self.timesteps], np.uint32,
-            compression='gzip', shuffle=True,
-        )
-        time.attrs['standard_name'] = b'time'
-        time.attrs['long_name'] = b'time'
-        time.attrs['calendar'] = b'gregorian'
-        time.attrs['units'] = self.datetime.strftime(
-            'seconds since %Y-%m-%d'
-        )
-        time[...] = self._time()
-
-        # Precipitation
-        shape = scans.BASEGRID.get_shape() + tuple([self.timesteps])
-        dataset = h5.create_dataset(
-            'precipitation', shape, np.float32, fillvalue=config.NODATAVALUE,
-            compression='gzip', shuffle=True, chunks=(20, 20, 24)
-        )
-
-        # Availability
-        dataset = h5.create_dataset(
-            'available', [self.timesteps], np.uint8, fillvalue=0,
-            compression='gzip', shuffle=True,
-        )
-        dataset[...] = 0
-
-        # Dimensions
-        h5['precipitation'].dims.create_scale(h5['north'])
-        h5['precipitation'].dims.create_scale(h5['east'])
-        h5['precipitation'].dims.create_scale(h5['time'])
-
-        h5['precipitation'].dims[0].attach_scale(h5['north'])
-        h5['precipitation'].dims[1].attach_scale(h5['east'])
-        h5['precipitation'].dims[2].attach_scale(h5['time'])
-
-        h5['available'].dims.create_scale(h5['time'])
-        h5['available'].dims[0].attach_scale(h5['time'])
-
-        logging.info(
-            'Created ThreddsFile {}'.format(os.path.basename(self.path)),
-        )
-        logging.debug(self.path)
-        return h5
-
-    def check(self):
-        """ Raise ValueError if check fails. """
-
-        with h5py.File(self.path) as h5:
-            if 'time' not in h5:
-                raise ValueError("No 'time' dataset.")
-            if not h5['time'].size == self.timesteps:
-                raise ValueError('Expected size {}, found {}.'.format(
-                    self.timesteps, h5['time'].size,
-                ))
-
-    def get_or_create(self):
-        """
-        Return h5 ready for writing.
-
-        If already exists, it is checked against some criteria. If it
-        fails the test or does not exist at all, a new file is created
-        and initialized.
-        """
-        logging.debug(self.path)
-        if not os.path.exists(self.path):
-            return self.create()
-        try:
-            self.check()
-        except ValueError as e:
-            logging.debug('Check said: "{}"; Creating new file.'.format(e))
-            os.remove(self.path)
-            return self.create()
-        return h5py.File(self.path)
-
-    def update(self, product):
-        """ Update from product """
-        # Create or reuse existing thredds file
-        h5_thredds = self.get_or_create()
-
-        # Temporarily update
-        try:
-            del h5_thredds['time'].attrs['unit']
-        except KeyError:
-            pass  # It wasn't there anyway.
-        h5_thredds['time'].attrs['units'] = self.datetime.strftime(
-            'seconds since %Y-%m-%d'
-        )
-
-        # Update from products if necessary
-        index = self._index(product)
-        available = h5_thredds['available']
-        if self.flag >= available[index]:
-            target = h5_thredds['precipitation']
-            with product.get() as h5_product:
-                source = h5_product['precipitation']
-                target[..., index] = source[...]
-                available[index] = self.flag
-
-        # Roundup
-        logging.info('Updated {} ({})'.format(
-            os.path.basename(self.path),
-            product.datetime),
-        )
-        logging.debug(self.path)
-        logging.debug('ThreddsFile fill status: {} %'.format(
-            np.bool8(available[:]).sum() / available.size))
-
-        h5_thredds.close()
-
-    def get(self):
-        """ Return readonly dataset. """
-        return h5py.File(self.path, 'r')
-
-    def __eq__(self, other):
-        return unicode(self) == unicode(other)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
-        if hasattr(self, 'path'):
-            return self.path
-        if hasattr(self, 'url'):
-            return self.url
 
 
 class CopiedProduct(object):
@@ -367,9 +60,6 @@ class CopiedProduct(object):
         logging.debug(self.path)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
         return self.path
 
 
@@ -492,7 +182,7 @@ class CalibratedProduct(object):
                                (1 - mask) * interpolator.precipitation)
 
         self.metadata = dict(dataloader.dataset.attrs)
-            
+
         utils.convert_to_lists_and_unicode(self.metadata)
 
         dataloader.dataset.close()
@@ -536,9 +226,6 @@ class CalibratedProduct(object):
         return h5py.File(self.path, 'r')
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
         return self.path
 
     def previous(self):
@@ -620,9 +307,6 @@ class ConsistentProduct(object):
         return consistent_product
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
         return self.path
 
 
@@ -694,10 +378,10 @@ class Consistifier(object):
             # Calculate sum of subproducts
             subproduct_sum = np.ma.zeros(scans.BASEGRID.get_shape())
             for subproduct in cls._subproducts(product):
-                    subproduct_sum = np.ma.sum([
-                        subproduct_sum,
-                        cls._precipitation_from_product(subproduct),
-                    ], 0)
+                subproduct_sum = np.ma.sum([
+                    subproduct_sum,
+                    cls._precipitation_from_product(subproduct),
+                ], 0)
 
             # Calculate factor
             factor = np.where(

@@ -9,7 +9,7 @@ Tasks to be replaced by search-and-fix scripts:
 - Rescale when needed
 - Special thing is publish:
   - Need a special published state somewhere. If not, publish on all
-    old-fashioned channels again such as ftp, thredds, images.
+    old-fashioned channels again such as ftp, images.
 
 Improve:
 - precalculate interpolations for all scans of NL and BE radars
