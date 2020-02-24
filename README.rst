@@ -77,7 +77,7 @@ Then, to install the 'gstat' package, in the R interpreter::
 
 And give "y" when appropriate.
 
-Finally, the python part::
+Then, the python part::
 
     $ sudo pip3 install --upgrade pip virtualenv
     $ virtualenv --system-site-packages .venv
@@ -86,9 +86,18 @@ Finally, the python part::
     (virtualenv)$ pip install -e .
 
 
-Use symbolic links to link to external var/misc and localconfig files.
+Checkout our private radar repo in src/radar and use symbolic links to link to
+some configuration files.
 
-# TODO running celery on server and in development
+Make some symlinks:
+    var/misc -> ../src/radar/misc/
+    etc/supervisord.conf -> ../src/radar/etc/supervisord.conf
+    openradar/localconfig -> ../src/radar/radar/stagingconfig.py
+
+
+To start the celery worker, either run `supervisord` in the installation
+directory, or `supervisord -c /srv/openradar/etc/supervisord.conf` from
+elsewhere.
 
 
 Scripts
