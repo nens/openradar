@@ -29,7 +29,7 @@ def sync_radar():
     missing publications although they are available on the server. This
     script fills in the holes.
     """
-    loghelper.setup_logging(os.path.join(config.LOG_DIR, 'sync.log'))
+    loghelper.setup_logging(os.path.join(config.LOG_DIR, 'sync2ftp.log'))
     datetimes = tuple(get_datetimes())
     prodcodes = 'rnau'
     timeframes = 'fhd'
