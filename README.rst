@@ -94,10 +94,12 @@ Make some symlinks:
     etc/supervisord.conf -> ../src/radar/etc/supervisord.conf
     openradar/localconfig -> ../src/radar/radar/stagingconfig.py
 
-
 To start the celery worker, either run `supervisord` in the installation
 directory, or `supervisord -c /srv/openradar/etc/supervisord.conf` from
 elsewhere.
+
+Most scripts are periodically runned on the server via cronjobs. The respective
+crontabs are (ideally) mirrored in our private radar repo.
 
 
 Scripts
@@ -156,42 +158,10 @@ resubmit the lost tasks. Anyway::
     $ .venv/bin/celery --app=openradar.tasks.app purge
 
 
-Cronjobs on production server
------------------------------
-
-    # m    h dom mon dow command
-    # availability
-    @reboot              /srv/openradar/.venv/bin/supervisord
-    1      7 *   *   *   /srv/openradar/.venv/bin/supervisorctl restart celery
-    2      7 *   *   *   /srv/openradar/.venv/bin/sync_radar_to_ftp  # repairs missed ftp pubs
-
-    # production and cleanup
-    # m  h      dom mon dow command
-    */5    * *   *   *   /srv/openradar/.venv/bin/master
-    13     * *   *   *   /srv/openradar/.venv/bin/cleanup
-    43     * *   *   *   /srv/openradar/.venv/bin/sync  # only Evap and Eps
-    */10   * *   *   *   /srv/openradar/.venv/bin/sync_ground
-
-    # Remove old things
-    11     * *   *   *   find /srv/openradar/var/nowcast_multiscan -mmin +59 -delete
-    12     * *   *   *   find /srv/openradar/var/nowcast_aggregate -mmin +59 -delete
-    13     * *   *   *   find /srv/openradar/var/nowcast_calibrate -mmin +59 -delete
-    14     7 *   *   *   find /mnt/fews-g/data-archive/img -mtime +3 -delete
-
-    # extra cleanups (heavy KNMI volumes)
-    # m    h dom mon dow command
-    13     * *   *   *   find /119-fs-c01/regenrprod/radar/NL61 -mtime +7 -delete
-    13     * *   *   *   find /119-fs-c01/regenrprod/radar/NL62 -mtime +7 -delete
-
-
 Product table
 -------------
 This table shows how the products should be calibrated and which products
-should be consistent with which other products. *) Delivery can not
-be earlier than the aggregated product that the consistent product is
-based upon.
-
-::
+should be consistent with which other products::
 
 
     Timeframe | Product | Delivery*     | Calibration | Consistent with
@@ -211,3 +181,6 @@ based upon.
               |    A    | 12 hours      | Kriging     |
               |    U    | 30 days       | Kriging     |
 
+
+`*`: Delivery can not be earlier than the aggregated product that the
+consistent product is based upon
