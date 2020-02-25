@@ -149,7 +149,7 @@ REMOTE_RADARS = []
 # Throughputs of radar related data to client ftp.
 FTP_THROUGH = {}
 
-CELERY_BROKER_URL = 'redis://redis'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 
 # Import local settings
 try:

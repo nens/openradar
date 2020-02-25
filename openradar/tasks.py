@@ -7,6 +7,7 @@ import sys
 from datetime import timedelta
 
 import celery
+import ciso8601
 
 from openradar import config
 from openradar import loghelper
@@ -16,30 +17,34 @@ from openradar import products
 from openradar import publishing
 from openradar import utils
 
-
-# vvv Fix for celery forking problem
-# os.environ['PYTHONPATH'] = ':'.join(sys.path)
-
 # Configure celery
 app = celery.Celery()
-app.conf.update(
-    BROKER_URL=config.CELERY_BROKER_URL,
-    CELERYD_TASK_TIME_LIMIT=600,
-)
+app.conf.broker_url = config.CELERY_BROKER_URL
+app.conf.task_time_limit = 600
+# app.conf.task_always_eager = True
 
 
-@celery.task
+def on_failure(self, exc, task_id, args, kwargs, einfo):
+    logging.warn(einfo)
+
+
+@app.task
 def do_nothing():
     """ Empty task that can be used as the start of a chain. """
 
 
-@celery.task
+@app.task(on_failure=on_failure)
 def aggregate(result, datetime, timeframe, nowcast,
               radars, declutter, direct=False, cascade=False):
     """ Create aggregates and optionally cascade to depending products. """
     loghelper.setup_logging(logfile_name='radar_aggregate.log')
-    
     logging.info(20 * '-' + ' aggregate ' + 20 * '-')
+
+    # parse datetime if necessary
+    try:
+        datetime = ciso8601.parse_datetime(datetime)
+    except TypeError:
+        pass
     
     # Create aggregates
     aggregate_kwargs = dict(
@@ -82,12 +87,18 @@ def aggregate(result, datetime, timeframe, nowcast,
     logging.info(20 * '-' + ' aggregate complete ' + 20 * '-')
 
 
-@celery.task
+@app.task(on_failure=on_failure)
 def calibrate(result, datetime, prodcode, timeframe, nowcast,
               radars, declutter, direct=False, cascade=False):
     """ Created calibrated aggregated composites. """
     loghelper.setup_logging(logfile_name='radar_calibrate.log')
     logging.info(20 * '-' + ' calibrate ' + 20 * '-')
+
+    # parse datetime if necessary
+    try:
+        datetime = ciso8601.parse_datetime(datetime)
+    except TypeError:
+        pass
 
     # Create products
     if nowcast:
@@ -124,12 +135,18 @@ def calibrate(result, datetime, prodcode, timeframe, nowcast,
     logging.info(20 * '-' + ' calibrate complete ' + 20 * '-')
 
 
-@celery.task
+@app.task(on_failure=on_failure)
 def rescale(result, datetime, prodcode,
             timeframe, direct=False, cascade=False):
     """ Create rescaled products wherever possible. """
     loghelper.setup_logging(logfile_name='radar_rescale.log')
     logging.info(20 * '-' + ' rescale ' + 20 * '-')
+
+    # parse datetime if necessary
+    try:
+        datetime = ciso8601.parse_datetime(datetime)
+    except TypeError:
+        pass
 
     product = products.CalibratedProduct(prodcode=prodcode,
                                          datetime=datetime,
@@ -141,7 +158,7 @@ def rescale(result, datetime, prodcode,
     logging.info(20 * '-' + ' rescale complete ' + 20 * '-')
 
 
-@celery.task
+@app.task(on_failure=on_failure)
 def publish(result, datetimes, prodcodes, timeframes, endpoints, cascade,
             nowcast):
     """
@@ -153,6 +170,13 @@ def publish(result, datetimes, prodcodes, timeframes, endpoints, cascade,
     """
     loghelper.setup_logging(logfile_name='radar_publish.log')
     logging.info(20 * '-' + ' publish ' + 20 * '-')
+
+    # parse datetimes if necessary
+    try:
+        datetimes = [ciso8601.parse_datetime(d) for d in datetimes]
+    except TypeError:
+        pass
+
     publisher = publishing.Publisher(datetimes=datetimes,
                                      prodcodes=prodcodes,
                                      timeframes=timeframes,
@@ -162,13 +186,20 @@ def publish(result, datetimes, prodcodes, timeframes, endpoints, cascade,
     logging.info(20 * '-' + ' publish complete ' + 20 * '-')
 
 
-@celery.task
+@app.task(on_failure=on_failure)
 def nowcast(result, datetime, timeframe, minutes):
     """
     Create nowcast product.
     """
     loghelper.setup_logging(logfile_name='radar_nowcast.log')
     logging.info(20 * '-' + ' nowcast ' + 20 * '-')
+
+    # parse datetime if necessary
+    try:
+        datetime = ciso8601.parse_datetime(datetime)
+    except TypeError:
+        pass
+
     # the result product is called the nowcast product
     nowcast_product = products.NowcastProduct(
         datetime=datetime,
@@ -198,7 +229,7 @@ def nowcast(result, datetime, timeframe, minutes):
     logging.info(20 * '-' + ' nowcast complete ' + 20 * '-')
 
 
-@celery.task
+@app.task(on_failure=on_failure)
 def animate(result, datetime):
     """
     Create animation
@@ -208,6 +239,12 @@ def animate(result, datetime):
     """
     loghelper.setup_logging(logfile_name='radar_animate.log')
     logging.info(20 * '-' + ' animate ' + 20 * '-')
+
+    # parse datetime if necessary
+    try:
+        datetime = ciso8601.parse_datetime(datetime)
+    except TypeError:
+        pass
 
     images.create_animated_gif(datetime=datetime)
     logging.info(20 * '-' + ' animate complete ' + 20 * '-')
