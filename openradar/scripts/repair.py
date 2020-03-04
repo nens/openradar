@@ -36,7 +36,7 @@ def command(text):
         path = helper.path(datetime)
         if not os.path.exists(path):
             timestamp = utils.datetime2timestamp(datetime)
-            logger.debug('bin/master -r {}'.format(timestamp))
+            logger.debug(f'/srv/openradar/.venvbin/master -r {timestamp}')
 
 
 def get_parser():
@@ -61,5 +61,5 @@ def main():
 
     try:
         return command(**kwargs)
-    except:
+    except Exception:
         logger.exception('An exception has occurred.')
