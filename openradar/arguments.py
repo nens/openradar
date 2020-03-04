@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 
@@ -14,7 +13,7 @@ class Argument(object):
         # Create a parser
         parser = argparse.ArgumentParser(
             description=description,
-            #formatter_class=argparse.RawDescriptionHelpFormatter,
+            # formatter_class=argparse.RawDescriptionHelpFormatter,
         )
         # Add requested arguments to the parser
         for argument in arguments:
@@ -116,6 +115,7 @@ class Argument(object):
             action='store_true',
             help='Automatically create depending tasks',
         )
+
     def nowcast(self, parser):
         parser.add_argument(
             '-n', '--nowcast',
@@ -127,8 +127,8 @@ class Argument(object):
             '-e', '--endpoints',
             metavar='ENDPOINT',
             nargs='*',
-            choices=['h5', 'h5m', 'image', 'local', 'ftp'],
-            default=['image', 'local', 'ftp'],
+            choices=['image', 'ftp'],
+            default=['image', 'ftp'],
             help='Endpoint for publication.'
         )
 

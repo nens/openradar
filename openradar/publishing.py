@@ -1,11 +1,9 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 
 import ftplib
 import logging
 import os
-import shutil
 
 from openradar import config
 from openradar import images
@@ -125,29 +123,6 @@ class Publisher(object):
         return (p
                 for p in self.publications()
                 if p.timeframe == 'f' and p.prodcode == 'r')
-
-    def publish_local(self, cascade=False):
-        """ Publish to target dirs as configured in config. """
-        # Prepare dirs
-        logging.debug(
-            'Preparing {} dirs.'.format(len(config.COPY_TARGET_DIRS)),
-        )
-        for target_dir in config.COPY_TARGET_DIRS:
-            for path in [path
-                         for d in config.PRODUCT_CODE.values()
-                         for path in d.values()]:
-                utils.makedir(os.path.join(target_dir, path))
-        # Do the copying
-        logging.debug('Copying publications.')
-        for publication in self.publications(cascade=cascade):
-            proddict = config.PRODUCT_CODE[publication.timeframe]
-            for target_dir in config.COPY_TARGET_DIRS:
-                target_subdir = os.path.join(
-                    target_dir,
-                    proddict[publication.prodcode],
-                )
-                shutil.copy(publication.path, target_subdir)
-        logging.info('Local target dir copying complete.')
 
     def publish_image(self, cascade=False):
         """ Publish to geotiff image for webviewer. """
