@@ -86,20 +86,20 @@ Then, the python part::
     (virtualenv)$ pip install -e .
 
 
-Checkout our private radar repo in src/radar and use symbolic links to link to
+Checkout our private nens/rr-task in src/radar and use symbolic links to link to
 some configuration files.
 
 Make some symlinks:
-    var/misc -> ../src/radar/misc/
-    etc/supervisord.conf -> ../src/radar/etc/supervisord.conf
-    openradar/localconfig -> ../src/radar/radar/stagingconfig.py
+    var/misc -> rr-task/misc/
+    etc/supervisord.conf -> rr-task/<type>/supervisor/supervisord.conf
+    openradar/localconfig -> rr-task/<type>/openradar/localconfig.py
 
 To start the celery worker, either run `supervisord` in the installation
 directory, or `supervisord -c /srv/openradar/etc/supervisord.conf` from
 elsewhere.
 
 Most scripts are periodically runned on the server via cronjobs. The respective
-crontabs are (ideally) mirrored in our private radar repo.
+crontabs are (ideally) mirrored in our private nens/rr-task repository.
 
 
 Scripts
