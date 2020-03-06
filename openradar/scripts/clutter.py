@@ -66,7 +66,7 @@ def command(target_path, range_text):
         path = pathhelper.path(dt)
         logger.info('Processing {}'.format(path))
         with h5py.File(path, 'r') as h5:
-            for k, v in h5.iteritems():
+            for k, v in h5.items():
                 logger.debug('Radar: {}'.format(k))
                 d = v['rain']
                 a = d[:]
@@ -90,6 +90,7 @@ def command(target_path, range_text):
 
     # save
     logger.info('Saving {}'.format(target_path))
+    range_attr = f'{daterange.start} - {daterange.stop}'
     with h5py.File(target_path, 'w') as h5:
         for k in result:
             # Write to result
@@ -103,10 +104,7 @@ def command(target_path, range_text):
             d.attrs['cluttercount'] = count[k]
             d.attrs['threshold'] = get_threshold(k)
         h5.attrs['cluttercount'] = int(sum(count.values()) / len(count))
-        h5.attrs['range'] = b'{} - {}'.format(
-            daterange.start, daterange.stop
-        )
-    logging.info('Done summing clutter.')
+        h5.attrs['range'] = range_attr
 
 
 def main():
