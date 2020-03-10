@@ -36,7 +36,7 @@ def command(text):
         path = helper.path(datetime)
         if not os.path.exists(path):
             timestamp = utils.datetime2timestamp(datetime)
-            logger.debug(f'/srv/openradar/.venvbin/master -r {timestamp}')
+            logger.debug(f'/srv/openradar/.venv/bin/master -r {timestamp}')
 
 
 def get_parser():
