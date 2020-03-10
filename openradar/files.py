@@ -99,10 +99,10 @@ class RemoteFileRetriever(object):
                     continue
 
                 # double check header size and content size
-                content_length_get = response.headers["content-length"]
+                content_length_get = int(response.headers["content-length"])
                 logging.info('%s GET size %s', scan_name, content_length_get)
                 size = len(response.content)
-                logging.info('%s acutal size %s', scan_name, size)
+                logging.info('%s actual size %s', scan_name, size)
                 if content_length_get != size:
                     logging.info('Size mismatch, not saving.', scan_name)
                     continue
