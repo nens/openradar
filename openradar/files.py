@@ -73,7 +73,7 @@ class RemoteFileRetriever(object):
                 url = datetime.strftime(remote_radar['url'])
 
                 # check head for modification time
-                response = requests.head(url)
+                response = requests.head(url, auth=remote_radar.get('auth'))
                 if response.status_code != 200:
                     logging.debug('%s not available yet.', scan_name)
                     continue
