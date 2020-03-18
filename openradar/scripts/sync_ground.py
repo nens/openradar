@@ -5,7 +5,7 @@ Sync groundstations to a flat mirror and place new files atomically in an
 import directory.
 """
 from os.path import basename, join
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 import argparse
 import logging
