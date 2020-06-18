@@ -375,19 +375,18 @@ class Consistifier(object):
         consistified_products = []
         if cls._reliable(product):
             # Calculate sum of subproducts
-            subproduct_sum = np.ma.zeros(scans.BASEGRID.get_shape())
+            subproduct_sum = np.zeros(scans.BASEGRID.get_shape())
             for subproduct in cls._subproducts(product):
-                subproduct_sum = np.ma.sum([
-                    subproduct_sum,
-                    cls._precipitation_from_product(subproduct),
-                ], 0)
+                spp = cls._precipitation_from_product(subproduct).filled(0)
+                # kriging happens to create NaNs sometimes
+                spp[np.isnan(spp)] = 0
+                subproduct_sum += spp
 
             # Calculate factor
-            factor = np.where(
-                np.ma.equal(subproduct_sum, 0),
-                1,
-                cls._precipitation_from_product(product) / subproduct_sum,
-            )
+            factor = np.ones(scans.BASEGRID.get_shape())
+            pp = cls._precipitation_from_product(product).filled(0)
+            index = subproduct_sum > 0
+            factor[index] = pp[index] / subproduct_sum[index]
 
             # Create consistent products
             for subproduct in cls._subproducts(product):
