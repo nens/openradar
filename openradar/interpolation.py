@@ -186,8 +186,7 @@ class Interpolator(object):
         '''
         x, y, z, klasse = self.get_rain_and_location()
         self.create_interpolation_grid()
-        krige_grid = self.ked(x, y, z)
-        return krige_grid
+        return self.ked(x, y, z)
 
     def get_radar_for_locations(self, rasterdata=None, size=2):
         '''
@@ -439,7 +438,10 @@ class Interpolator(object):
             # self.crossval_ked = robj.r('gstat.cv')(ked)
         except:
             logging.exception('Exception during kriging:')
-            rain_est = dataset
+            return
+        if numpy.isnan(rain_est).any():
+            logging.warning('Kriging result contains NaN, not using it')
+            return
         rain_est = rain_est.reshape((self.ny, self.nx))
 
         # handle extreme outcomes of kriging

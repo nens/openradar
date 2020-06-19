@@ -134,54 +134,46 @@ class CalibratedProduct(object):
         interpolator = Interpolator(dataloader)
 
         # Calibrate, method depending on prodcode and timeframe
-        precipitation_mask = np.equal(
-            interpolator.precipitation,
-            config.NODATAVALUE,
-        )
         if data_count == 0:
             logging.info('Calibrating is not useful without stations.')
-            calibration_method = 'None'
-            calibrated_radar = np.ma.array(
-                interpolator.precipitation,
-                mask=precipitation_mask,
-            )
+            calibrated_radar = None
         elif self.prodcode in ['a', 'u'] and self.timeframe in ['h', 'd']:
             logging.info('Calibrating using kriging.')
             calibration_method = 'Kriging External Drift'
             try:
-                calibrated_radar = np.ma.where(
-                    precipitation_mask,
-                    interpolator.precipitation,
-                    interpolator.get_calibrated(),
-                )
+                calibrated_radar = interpolator.get_calibrated()
             except:
-                logging.exception('Exception during kriging:')
+                logging.exception('Exception during calibration with kriging:')
                 calibrated_radar = None
+
         else:
             logging.info('Calibrating using idw.')
             calibration_method = 'Inverse Distance Weighting'
             try:
                 factor = interpolator.get_correction_factor()
-                calibrated_radar = np.ma.where(
-                    precipitation_mask,
-                    interpolator.precipitation,
-                    interpolator.precipitation * factor,
-                )
             except:
                 logging.exception('Exception during idw:')
                 calibrated_radar = None
+            else:
+                calibrated_radar = interpolator.precipitation * factor
 
         if calibrated_radar is None:
             logging.warn('Calibration failed.')
             calibration_method = 'None'
-            self.calibrated = interpolator.precipitation
+            calibrated_radar = interpolator.precipitation
         else:
+            # apply country mask
             mask = utils.get_countrymask()
-            self.calibrated = (mask * calibrated_radar +
-                               (1 - mask) * interpolator.precipitation)
+            calibrated_radar = (
+                mask * calibrated_radar +
+                + (1 - mask) * interpolator.precipitation
+            )
+
+            # apply the original (no radar coverage) mask
+            index = (interpolator.precipitation == config.NODATAVALUE)
+            calibrated_radar[index] = config.NODATAVALUE
 
         self.metadata = dict(dataloader.dataset.attrs)
-
         utils.convert_to_lists_and_unicode(self.metadata)
 
         dataloader.dataset.close()
@@ -195,9 +187,9 @@ class CalibratedProduct(object):
             cal_method=calibration_method,
         ))
 
-        calibrated_ma = np.ma.array(
-            self.calibrated,
-            mask=np.equal(self.calibrated, config.NODATAVALUE),
+        calibrated_ma = np.ma.masked_equal(
+            calibrated_radar,
+            config.NODATAVALUE,
         )
 
         logging.debug('Setting negative values to 0. Min was: {}'.format(
@@ -378,8 +370,14 @@ class Consistifier(object):
             subproduct_sum = np.zeros(scans.BASEGRID.get_shape())
             for subproduct in cls._subproducts(product):
                 spp = cls._precipitation_from_product(subproduct).filled(0)
-                # kriging happens to create NaNs sometimes
-                spp[np.isnan(spp)] = 0
+
+                # in the past kriging sometimes resulted in NaN values
+                if np.isnan(spp).any():
+                    logging.warning(
+                        "Zeroing NaNs in %s", subproduct.path,
+                    )
+                    spp[np.isnan(spp)] = 0
+
                 subproduct_sum += spp
 
             # Calculate factor
@@ -394,7 +392,7 @@ class Consistifier(object):
                     ConsistentProduct.create(
                         product=subproduct,
                         factor=factor,
-                        consistent_with=os.path.basename(subproduct.path)
+                        consistent_with=os.path.basename(product.path)
                     )
                 )
             # Run this method on those products as well, since some
