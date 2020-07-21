@@ -29,7 +29,7 @@ def master(**kwargs):
     else:
         datetime_delivery = utils.closest_time()
         try:
-            files.sync_and_wait_for_files(dt_calculation=datetime_delivery)
+            files.fetch_volume_files(dt_calculation=datetime_delivery)
         except Exception as exception:
             logging.exception(exception)
 

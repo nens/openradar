@@ -145,7 +145,7 @@ FTP_PASSWORD = 'MyPassword'
 # Old style FTP imports
 FTP_RADARS = {}
 # New style mixed source imports
-REMOTE_RADARS = []
+VOLUME_SOURCES = []
 # Throughputs of radar related data to client ftp.
 FTP_THROUGH = {}
 

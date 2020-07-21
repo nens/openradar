@@ -2,7 +2,6 @@
 # (c) Nelen & Schuurmans.  GPL licensed, see LICENSE.rst.
 
 from openradar import config
-from openradar import periods
 from openradar import scans
 
 from datetime import datetime as Datetime
@@ -12,7 +11,6 @@ from os.path import abspath, dirname, exists, join
 import logging
 import os
 import shutil
-import time
 
 import requests
 
@@ -43,148 +41,170 @@ def organize_from_path(path):
         logging.info('Nothing found.')
 
 
-class RemoteFileRetriever(object):
-    """ Currently retrieves from HTTPS. """
-    def __init__(self, remote_radars, source_dir):
-        self.remote_radars = remote_radars
-        self.source_dir = source_dir
+class Dataset:
+    URL = (
+        "https://api.dataplatform.knmi.nl/open-data/"
+        "datasets/{dataset}/versions/{version}/files/"
+    )
+    HEADERS = {"Authorization": config.API_KEY}
 
-    def retrieve(self, text):
-        """ Retrieve files for some period. """
-        count = 0
-        for datetime in periods.Period(text):
-            for remote_radar in self.remote_radars:
-                # determine local paths
-                scan_name = datetime.strftime(remote_radar['scan'])
-                temp_path = join(self.source_dir, scan_name)
-                scan_signature = scans.ScanSignature(scan_name=scan_name)
-                scan_path = scan_signature.get_scanpath()
+    def __init__(self, dataset, version, step, pattern):
+        """Represents a Dataplatform Dataset.
 
-                # check if already retrieved
-                if exists(scan_path):
-                    logging.debug('%s already in radar dir.', scan_name)
-                    continue
-                if exists(temp_path):
-                    logging.debug(temp_path)
-                    logging.debug('%s already in source dir.', scan_name)
-                    continue
+        Args:
+            dataset (str): dataset name
+            version (str): dataset version
+        """
+        self.url = self.URL.format(dataset=dataset, version=version)
+        self.timedelta = Timedelta(**step)
+        self.pattern = pattern
 
-                # determine url
-                url = datetime.strftime(remote_radar['url'])
+    def _verify(self, items, start_after_filename=""):
+        """ Return verified items.
 
-                # check head for modification time
-                response = requests.head(url, auth=remote_radar.get('auth'))
-                if response.status_code != 200:
-                    logging.debug('%s not available yet.', scan_name)
-                    continue
+        This uses the files API to check if the items' files exist and have
+        modificationDate after item's  datetime.
+        """
+        response = requests.get(
+            self.url,
+            headers=self.HEADERS,
+            params={
+                "maxKeys": len(items),
+                "startAfterFilename": start_after_filename,
+            }
+        )
 
-                # compare modification time to expected datetime
-                last_modified = Datetime.strptime(
-                    response.headers["last-modified"],
-                    "%a, %d %b %Y %H:%M:%S GMT",
-                )
-                if abs((datetime - last_modified).total_seconds()) > 3600:
-                    logging.debug('%s not available yet.', scan_name)
-                    continue
+        # lookup dictionary for modification times
+        last_modified = {}
+        for record in response.json()["files"]:
+            last_modified[record["filename"]] = record["lastModified"]
 
-                # log head request content length
-                content_length = response.headers["content-length"]
-                logging.info('%s HEAD size %s', scan_name, content_length)
+        # only items with modification date after product date are allowed
+        verified = []
+        for item in items:
+            # note that "" will be smaller than any ISO datetime
+            item_last_modified = last_modified.get(item["filename"], "")
+            if item_last_modified > item["datetime"].isoformat():
+                verified.append(item)
 
-                # download
-                logging.debug('Downloading %s', url)
-                response = requests.get(url, auth=remote_radar.get('auth'))
-                if response.status_code != 200:
-                    logging.info('Retrieve of %s failed.', scan_name)
-                    continue
+        return verified
 
-                # double check header size and content size
-                content_length_get = int(response.headers["content-length"])
-                logging.info('%s GET size %s', scan_name, content_length_get)
-                size = len(response.content)
-                logging.info('%s actual size %s', scan_name, size)
-                if content_length_get != size:
-                    logging.info('Size mismatch, not saving.', scan_name)
-                    continue
+    def latest(self, count=1):
+        """Return list of (filename, datetime) tuples.
 
-                # save content to temporary directory
-                with open(temp_path, 'wb') as temp_file:
-                    temp_file.write(response.content)
-                    logging.debug('Retrieve of %s succeeded.', scan_name)
+        Args:
+            count (int): Number of files in the past to list.
 
-                # count succesful retrievings
-                count += 1
-        return count
+        The result may be shorter then count because the API is actually used
+        to check if the expected files are actually available.
+        """
+        # determine the timestamps where files are expected
+        now = Datetime.utcnow()
+        midnight = Datetime(now.year, now.month, now.day)
+        step_of_day = ((now - midnight) // self.timedelta)
+        dt_last = midnight + self.timedelta * step_of_day
+
+        # note we generate one extra into the past for the
+        # startAfterFilename parameter
+        items = []
+        for stepcount in range(-count, 1):
+            datetime = dt_last + stepcount * self.timedelta
+            filename = datetime.strftime(self.pattern)
+            items.append({"filename": filename, "datetime": datetime})
+
+        # make to lists for the verification
+        start_after_filename = items[0]["filename"]
+        from_start = []
+        after_filename = []
+        for item in items[1:]:
+            if item["filename"] > start_after_filename:
+                after_filename.append(item)
+            else:
+                from_start.append(item)
+
+        # verify lists using API
+        verified_from_start = self._verify(items=from_start)
+        verified_after_filename = self._verify(
+            items=after_filename, start_after_filename=start_after_filename,
+        )
+        return verified_after_filename + verified_from_start
+
+    def _get_download_url(self, filename):
+        """ Return temporary download url for filename.
+        """
+        response = requests.get(
+            "{url}/{filename}/url".format(url=self.url, filename=filename),
+            headers=self.HEADERS,
+        )
+        return response.json().get("temporaryDownloadUrl")
+
+    def retrieve(self, filename):
+        url = self._get_download_url(filename)
+        return requests.get(url).content
 
 
-def sync_and_wait_for_files(dt_calculation, td_wait=None, sleep=10):
+def get_download_path(scan_name):
+    """Return download path or None.
+
+    None means the scan is already downloaded.
     """
-    Return if files are present or utcnow > dt_files + td_wait
+    download_path = join(config.SOURCE_DIR, scan_name)
+    if exists(download_path):
+        return
 
-    Waiting for config.ALL_RADARS.
+    scan_signature = scans.ScanSignature(scan_name=scan_name)
+    scan_path = scan_signature.get_scanpath()
+    if exists(scan_path):
+        return
+
+    return download_path
+
+
+def fetch_knmi_volume_files(source, count):
+    dataset = Dataset(**source['platform'])
+    for item in dataset.latest(count):
+        scan_name = item["filename"]
+        download_path = get_download_path(scan_name)
+        if download_path is None:
+            continue
+
+        # download
+        content = dataset.retrieve(scan_name)
+        with open(download_path, 'wb') as f:
+            f.write(content)
+        logging.info("Retrieved %s", scan_name)
+
+
+def fetch_dwd_volume_files(source, count, dt_last):
+    step = Timedelta(minutes=5)
+    for stepcount in range(1 - count, 1):
+        dt_current = dt_last + step
+
+        scan_name = dt_current.strftime(source['scan'])
+        download_path = get_download_path(scan_name)
+        if download_path is None:
+            continue
+
+        # download
+        url = dt_current.strftime(source['url'])
+        response = requests.get(url, auth=source['auth'])
+        if response.status_code != 200:
+            continue
+        with open(download_path, 'wb') as f:
+            f.write(response.content)
+        logging.info("Retrieved %s", scan_name)
+
+
+def fetch_volume_files(dt_calculation):
     """
-    if td_wait is None:
-        td_wait = config.WAIT_EXPIRE_DELTA
-
-    logging.info('Waiting for files until {}.'.format(
-        dt_calculation + td_wait,
-    ))
-
-    dt_radar = dt_calculation - Timedelta(minutes=5)
-
-    set_expected = set()
+    """
+    # the radar file is 5 minutes before the product file.
+    dt_last = dt_calculation - Timedelta(minutes=5)
+    count = 12
 
     # Add radars to expected files.
-    for radar in config.ALL_RADARS:
-        scan_tuple = radar, dt_radar
-        scan_signature = scans.ScanSignature(scan_tuple=scan_tuple)
-        if not exists(scan_signature.get_scanpath()):
-            set_expected.add(scan_signature.get_scanname())
-
-    logging.debug('looking for {}'.format(', '.join(set_expected)))
-
-    # keep walking the source dir until all
-    # files are found or the timeout expires.
-
-    # new style http and maybe other imports
-    remote_file_retriever = RemoteFileRetriever(
-        remote_radars=config.REMOTE_RADARS,
-        source_dir=config.SOURCE_DIR,
-    )
-
-    while True:
-        # retrieve from http sources
-        retrieved = remote_file_retriever.retrieve('1h')
-        if retrieved:
-            logging.info('Retrieved %s remote files.', retrieved)
-
-        set_names = set()
-        for name in os.listdir(config.SOURCE_DIR):
-            scan_signature = scans.ScanSignature(scan_name=name)
-            set_names.add(scan_signature.get_scanname())
-
-        # Add the intersection of names and expected to arrived.
-        set_arrived = set_names & set_expected
-        if set_arrived:
-            set_expected -= set_arrived
-            logging.debug('Found: {}'.format(', '.join(set_arrived)))
-            if not set_expected:
-                logging.info('All required files have arrived.')
-                return True
-            logging.debug('Awaiting: {}'.format(
-                ', '.join(set_expected),
-            ))
-
-        if Datetime.utcnow() > dt_calculation + td_wait:
-            break
-
-        try:
-            logging.debug('Sleeping...')
-            time.sleep(config.WAIT_SLEEP_TIME)
-        except KeyboardInterrupt:
-            break
-
-    logging.info('Timeout expired, but {} not found.'.format(
-        ', '.join(set_expected),
-    ))
-    return False
+    for source in config.VOLUME_SOURCES:
+        if "platform" in source:
+            fetch_knmi_volume_files(source, count=count)
+        else:
+            fetch_dwd_volume_files(source=source, count=count, dt_last=dt_last)
