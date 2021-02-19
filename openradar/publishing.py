@@ -93,6 +93,11 @@ class Publisher(object):
             timeframes=self.timeframes,
         )
         for combination in combinations:
+            if combination.pop('nowcast') and self.nowcast:
+                yield products.CopiedProduct(datetime=combination['datetime'])
+            # ignore the rest, only publish to ftp for nowcast from now on
+            continue
+
             nowcast = combination.pop('nowcast')
             if nowcast != self.nowcast:
                 continue
