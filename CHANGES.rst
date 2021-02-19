@@ -11,7 +11,7 @@ Changelog of openradar
 
 - Skip dotfiles in FTP sync source.
 
-- Ignore NaN on rescale
+- Stop ftp publishing except for nowcast purposes.
 
 
 0.4.6 (2018-12-21)
