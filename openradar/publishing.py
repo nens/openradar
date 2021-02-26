@@ -125,9 +125,27 @@ class Publisher(object):
 
     def image_publications(self):
         """ Return product generator of real-time, five-minute products. """
-        return (p
-                for p in self.publications()
-                if p.timeframe == 'f' and p.prodcode == 'r')
+        if self.nowcast:
+            return
+
+        if isinstance(self.datetimes, (list, tuple)):
+            datetimes = self.datetimes
+        else:
+            # Generate datetimes from rangetext string.
+            datetimes = utils.MultiDateRange(self.datetimes).iterdatetimes()
+        combinations = utils.get_product_combinations(
+            datetimes=datetimes,
+            prodcodes=self.prodcodes,
+            timeframes=self.timeframes,
+        )
+        for combination in combinations:
+            if combination.pop('nowcast'):
+                continue
+            if combination['prodcode'] != 'r':
+                continue
+            if combination['timeframe'] != 'f':
+                continue
+            yield products.CalibratedProduct(**combination)
 
     def publish_image(self, cascade=False):
         """ Publish to geotiff image for webviewer. """
