@@ -258,10 +258,10 @@ def get_valid_timeframes(datetime):
     if datetime.second == 0 and datetime.microsecond == 0:
         if datetime.minute == (datetime.minute // 5) * 5:
             result.append('f')
-        if datetime.minute == 0:
-            result.append('h')
-            if datetime.hour == 8:
-                result.append('d')
+        # if datetime.minute == 0:
+            # result.append('h')
+            # if datetime.hour == 8:
+                # result.append('d')
     return result
 
 
@@ -272,9 +272,9 @@ def get_aggregate_combinations(datetimes,
         valid_timeframes = get_valid_timeframes(datetime=_datetime)
         for timeframe in timeframes:
             if timeframe in valid_timeframes:
-                yield dict(nowcast=False,
-                           datetime=_datetime,
-                           timeframe=timeframe)
+                # yield dict(nowcast=False,
+                           # datetime=_datetime,
+                           # timeframe=timeframe)
                 if timeframe == 'f':
                     yield dict(nowcast=True,
                                datetime=_datetime,

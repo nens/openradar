@@ -124,9 +124,9 @@ NOWCAST_PRODUCT_CODE = 'TF0005_X'
 DELIVERY_TIMES = (
     ('x', datetime.timedelta()),
     ('r', datetime.timedelta()),
-    ('n', datetime.timedelta(hours=1)),
-    ('a', datetime.timedelta(hours=12)),
-    ('u', datetime.timedelta(days=30)),
+    # ('n', datetime.timedelta(hours=1)),
+    # ('a', datetime.timedelta(hours=12)),
+    # ('u', datetime.timedelta(days=30)),
 )
 
 # Delays for waiting-for-files
