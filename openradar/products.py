@@ -49,7 +49,7 @@ class CopiedProduct(object):
 
         try:
             os.makedirs(os.path.dirname(self.path))
-        except:
+        except Exception:
             pass
 
         shutil.copy(source_path, self.path)
@@ -109,69 +109,19 @@ class CalibratedProduct(object):
         aggregate = self._get_aggregate()
         aggregate.make()
         metafile = os.path.join(config.MISC_DIR, 'grondstations.csv')
+        stations_count = 0
+        cal_station_ids = []
+        cal_station_coords = []
+        cal_station_measurements = []
+        data_count = 0
+
+        logging.info('Not calibrating because we stopped doing that.')
+        calibration_method = 'None'
         dataloader = DataLoader(metafile=metafile,
                                 aggregate=aggregate,
                                 timeframe=self.timeframe)
-        try:
-            dataloader.processdata()
-            stations_count = len(dataloader.rainstations)
-            cal_stations = [rs for rs in dataloader.rainstations
-                            if not rs.measurement == -999.]
-            data_count = len(cal_stations)
-            cal_station_ids = [rs.station_id for rs in cal_stations]
-            cal_station_coords = [(rs.lon, rs.lat) for rs in cal_stations]
-            cal_station_measurements = [rs.measurement for rs in cal_stations]
-            logging.info('{} out of {} gauges have data for {}.'.format(
-                data_count, stations_count, dataloader.date)
-            )
-        except:
-            logging.exception('Exception during calibration preprocessing:')
-            stations_count = 0
-            cal_station_ids = []
-            cal_station_coords = []
-            cal_station_measurements = []
-            data_count = 0
         interpolator = Interpolator(dataloader)
-
-        # Calibrate, method depending on prodcode and timeframe
-        if data_count == 0:
-            logging.info('Calibrating is not useful without stations.')
-            calibrated_radar = None
-        elif self.prodcode in ['a', 'u'] and self.timeframe in ['h', 'd']:
-            logging.info('Calibrating using kriging.')
-            calibration_method = 'Kriging External Drift'
-            try:
-                calibrated_radar = interpolator.get_calibrated()
-            except:
-                logging.exception('Exception during calibration with kriging:')
-                calibrated_radar = None
-
-        else:
-            logging.info('Calibrating using idw.')
-            calibration_method = 'Inverse Distance Weighting'
-            try:
-                factor = interpolator.get_correction_factor()
-            except:
-                logging.exception('Exception during idw:')
-                calibrated_radar = None
-            else:
-                calibrated_radar = interpolator.precipitation * factor
-
-        if calibrated_radar is None:
-            logging.warn('Calibration failed.')
-            calibration_method = 'None'
-            calibrated_radar = interpolator.precipitation
-        else:
-            # apply country mask
-            mask = utils.get_countrymask()
-            calibrated_radar = (
-                mask * calibrated_radar +
-                + (1 - mask) * interpolator.precipitation
-            )
-
-            # apply the original (no radar coverage) mask
-            index = (interpolator.precipitation == config.NODATAVALUE)
-            calibrated_radar[index] = config.NODATAVALUE
+        calibrated_radar = interpolator.precipitation
 
         self.metadata = dict(dataloader.dataset.attrs)
         utils.convert_to_lists_and_unicode(self.metadata)
