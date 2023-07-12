@@ -89,7 +89,7 @@ def master(**kwargs):
                 prodcodes=[calibrate_kwargs['prodcode']],
                 timeframes=[calibrate_kwargs['timeframe']],
                 nowcast=calibrate_kwargs['nowcast'],
-                endpoints=['ftp', 'image'],
+                endpoints=['image'],
                 cascade=True,
             ))
             tpl = 'Pub. task: {datetime} {timeframe} {prodcode} {nowcast}'
