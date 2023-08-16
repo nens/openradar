@@ -56,78 +56,26 @@ class Dataset:
             version (str): dataset version
         """
         self.url = self.URL.format(dataset=dataset, version=version)
-        self.timedelta = Timedelta(**step)
         self.pattern = pattern
-
-    def _verify(self, items, start_after_filename=""):
-        """ Return verified items.
-
-        This uses the files API to check if the items' files exist and have
-        modificationDate after item's  datetime.
-        """
-        response = requests.get(
-            self.url,
-            headers=self.HEADERS,
-            params={
-                "maxKeys": len(items),
-                "startAfterFilename": start_after_filename,
-            }
-        )
-
-        # lookup dictionary for modification times
-        last_modified = {}
-        for record in response.json()["files"]:
-            last_modified[record["filename"]] = record["lastModified"]
-
-        # only items with modification date after product date are allowed
-        verified = []
-        for item in items:
-            # note that "" will be smaller than any ISO datetime
-            item_last_modified = last_modified.get(item["filename"], "")
-            if item_last_modified > item["datetime"].isoformat():
-                verified.append(item)
-
-        return verified
 
     def latest(self, count=1):
         """Return list of (filename, datetime) tuples.
 
         Args:
             count (int): Number of files in the past to list.
-
-        The result may be shorter then count because the API is actually used
-        to check if the expected files are actually available.
         """
-        # determine the timestamps where files are expected
-        now = Datetime.utcnow()
-        midnight = Datetime(now.year, now.month, now.day)
-        step_of_day = ((now - midnight) // self.timedelta)
-        dt_last = midnight + self.timedelta * step_of_day
-
-        # note we generate one extra into the past for the
-        # startAfterFilename parameter
-        items = []
-        for stepcount in range(-count, 1):
-            datetime = dt_last + stepcount * self.timedelta
-            filename = datetime.strftime(self.pattern)
-            items.append({"filename": filename, "datetime": datetime})
-
-        # make to lists for the verification
-        start_after_filename = items[0]["filename"]
-        from_start = []
-        after_filename = []
-        for item in items[1:]:
-            if item["filename"] > start_after_filename:
-                after_filename.append(item)
-            else:
-                from_start.append(item)
-
-        # verify lists using API
-        verified_from_start = self._verify(items=from_start)
-        verified_after_filename = self._verify(
-            items=after_filename, start_after_filename=start_after_filename,
+        response = requests.get(
+            self.url,
+            headers=self.HEADERS,
+            params={"maxKeys": count, "sorting": "desc"},
         )
-        return verified_after_filename + verified_from_start
+        result = []
+        for item in response.json()["files"]:
+            filename = item["filename"]
+            datetime = Datetime.strptime(filename, self.pattern)
+            result.append({"filename": filename, "datetime": datetime})
+
+        return result
 
     def _get_download_url(self, filename):
         """ Return temporary download url for filename.
